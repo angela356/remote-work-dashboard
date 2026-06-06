@@ -727,7 +727,7 @@ async function updateWellbeing() {
 async function plotWho5Waves() {
   const data = await load('who5_waves')
   const traces = ['2015','2021','2024'].map(w => {
-    const pts = WFH_ORDER.map(wfh => { const r=data.find(d=>d.wave===+w&&d.wfh===wfh); return r?r.who5:null })
+    const pts = WFH_ORDER.map(wfh => { const r=data.find(d=>d.wave===w&&d.wfh===wfh); return r?r.who5:null })
     return {x:WFH_ORDER, y:pts, mode:'lines+markers', name:`Wave ${w}`,
       line:{color:WAVE_COLORS[w],width:2.5,shape:'spline'},
       marker:{size:9,color:WAVE_COLORS[w],line:{color:'#0f1117',width:2}},
@@ -1096,7 +1096,7 @@ initLongitudinal.done = false
 async function plotLongWho5() {
   const data = await load('who5_waves')
   const traces = ['2015','2021','2024'].map(w => {
-    const pts = WFH_ORDER.map(wfh=>{ const r=data.find(d=>d.wave===+w&&d.wfh===wfh); return r?r.who5:null })
+    const pts = WFH_ORDER.map(wfh=>{ const r=data.find(d=>d.wave===w&&d.wfh===wfh); return r?r.who5:null })
     return {x:WFH_ORDER, y:pts, mode:'lines+markers', name:`Wave ${w}`,
       line:{color:WAVE_COLORS[w],width:3,shape:'spline'},
       marker:{size:10,color:WAVE_COLORS[w],line:{color:'#0f1117',width:2}},
