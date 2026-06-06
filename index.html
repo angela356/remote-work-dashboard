@@ -103,6 +103,7 @@ input[type=range]{padding:4px 0;accent-color:var(--blue)}
   <button class="nav-btn" onclick="showPage('wellbeing',this)">Well-being</button>
   <button class="nav-btn" onclick="showPage('productivity',this)">Productivity</button>
   <button class="nav-btn" onclick="showPage('perceptions',this)">Perceptions</button>
+  <button class="nav-btn" onclick="showPage('familypay',this)">Family &amp; Pay</button>
   <button class="nav-btn" onclick="showPage('deepdive',this)">Country Deep-Dive</button>
   <button class="nav-btn" onclick="showPage('longitudinal',this)">2015→2024</button>
   <button class="nav-btn" onclick="showPage('about',this)">About</button>
@@ -265,8 +266,42 @@ input[type=range]{padding:4px 0;accent-color:var(--blue)}
     <div class="col-9"><div class="card"><div class="card-title">Mean scores on remote work perception items</div><div class="plot-wrap tall" id="plot-likert"></div></div></div>
   </div>
   <div class="row">
-    <div class="col-6"><div class="card"><div class="card-title">Distribution: % time working remotely (R-MAP)</div><div class="plot-wrap" id="plot-pct-dist"></div></div></div>
-    <div class="col-6"><div class="card"><div class="card-title">Daily commute time saved by remote work intensity</div><div class="plot-wrap" id="plot-commute"></div></div></div>
+    <div class="col-6"><div class="card"><div class="card-title">Commute time distribution — one-way minutes (R-MAP)</div><div class="plot-wrap" id="plot-commute-dist"></div></div></div>
+    <div class="col-6"><div class="card"><div class="card-title">Weekly hours reclaimed by remote days (R-MAP)</div><div class="plot-wrap" id="plot-commute-scenarios"></div></div></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     PAGE 5b: FAMILY & PAY
+══════════════════════════════════════════════════════ -->
+<div id="page-familypay" class="page">
+  <div class="section-head">Family Situation & Compensation — EWCTS 2021 · Health Impact 2025</div>
+  <div class="row">
+    <div class="col-3">
+      <div class="sidebar">
+        <label class="ctrl-label">Family well-being metric</label>
+        <select id="fam-metric" onchange="updateFamily()">
+          <option value="who5">WHO-5 well-being</option>
+          <option value="wlb">Work-life balance satisfaction</option>
+        </select>
+        <div class="note">
+          <b>Family type</b> derived from EWCTS 2021 household composition (size + presence of children under 16).<br><br>
+          Does remote work benefit parents differently from people living alone? This view tests that.
+        </div>
+      </div>
+    </div>
+    <div class="col-9"><div class="card"><div class="card-title" id="fam-title">WHO-5 well-being by WFH frequency × family type (EWCTS 2021)</div><div class="plot-wrap tall" id="plot-family-main"></div></div></div>
+  </div>
+  <div class="row">
+    <div class="col-12"><div class="card"><div class="card-title">Who works from home? Family composition by WFH frequency (EWCTS 2021)</div><div class="plot-wrap" id="plot-family-dist"></div></div></div>
+  </div>
+  <div class="section-head" style="margin-top:8px">Compensation by Work Arrangement — Health Impact 2025</div>
+  <div class="row">
+    <div class="col-5"><div class="card"><div class="card-title">Average salary by arrangement</div><div class="plot-wrap" id="plot-salary-avg"></div></div></div>
+    <div class="col-7"><div class="card"><div class="card-title">Salary band distribution by arrangement</div><div class="plot-wrap" id="plot-salary-dist"></div></div></div>
+  </div>
+  <div class="row">
+    <div class="col-12"><div class="card"><div class="card-title">Average salary by sector × work arrangement</div><div class="plot-wrap" id="plot-salary-sector"></div></div></div>
   </div>
 </div>
 
@@ -342,6 +377,9 @@ input[type=range]{padding:4px 0;accent-color:var(--blue)}
       <li><b>Productivity proxy</b>: derived from Likert item "I feel less productive while working remotely" (R-MAP, 1–7 scale, inverted). Direct productivity measurement is not available in survey data.</li>
       <li><b>WFH frequency harmonization</b>: EWCS 2015 labels (Daily / Several times a week / etc.) mapped to unified 5-level scheme (Never / Rarely / Sometimes / Often / Always) shared with 2021 and 2024 waves.</li>
       <li><b>Survey weights</b> applied where available: w5 (EWCS 2015), weight_core (EWCTS 2021), calweight (EWCS 2024).</li>
+      <li><b>Family type</b>: derived from EWCTS 2021 household composition — size combined with presence of children under 16 (Living alone / Couple, no children / Multi-adult, no children / Household with children).</li>
+      <li><b>Salary</b>: Health Impact 2025 salary bands; averages computed using band midpoints ($50K–$130K).</li>
+      <li><b>Commute time saved</b>: estimated as remote days × one-way commute × 2, from R-MAP self-reported commute minutes.</li>
       <li><b>Aggregated data only</b>: this dashboard displays pre-computed group means and percentages. No individual-level microdata is included.</li>
     </ul>
     <h4>Project</h4>
@@ -398,6 +436,7 @@ function showPage(id, btn) {
   const inits = {
     overview: initOverview, map: initMap, wellbeing: initWellbeing,
     productivity: initProductivity, perceptions: initPerceptions,
+    familypay: initFamilyPay,
     deepdive: initDeepDive, longitudinal: initLongitudinal
   }
   if (inits[id] && !inits[id].done) { inits[id](); inits[id].done=true }
@@ -923,7 +962,7 @@ async function initPerceptions() {
   const ctSel = document.getElementById('perc-country')
   countries.forEach(c=>{ const o=document.createElement('option');o.value=c;o.textContent=c;ctSel.appendChild(o) })
 
-  await Promise.all([updatePerceptions(), plotPctDist(), plotCommute()])
+  await Promise.all([updatePerceptions(), plotCommuteDist(), plotCommuteScenarios()])
 }
 initPerceptions.done = false
 
@@ -999,29 +1038,171 @@ async function updatePerceptions() {
   }), PLOTLY_CONFIG)
 }
 
-async function plotPctDist() {
-  const d = await load('pct_remote_dist')
-  Plotly.newPlot('plot-pct-dist', [{
-    type:'bar', x:d.map(r=>r.band), y:d.map(r=>r.n),
-    marker:{color:C.blue, opacity:0.85},
-    hovertemplate:'%{x}: <b>%{y}</b> respondents<extra></extra>'
+async function plotCommuteDist() {
+  const d = await load('commute_dist')
+  const order = ['0-15','15-30','30-45','45-60','60-90','90+']
+  d.sort((a,b)=>order.indexOf(a.band)-order.indexOf(b.band))
+  const total = d.reduce((s,r)=>s+r.n,0)
+  Plotly.newPlot('plot-commute-dist', [{
+    type:'bar', x:d.map(r=>r.band+' min'), y:d.map(r=>r.n),
+    text:d.map(r=>(r.n/total*100).toFixed(0)+'%'),
+    textposition:'outside', textfont:{color:C.muted,size:9},
+    marker:{color:d.map((r,i)=>lerpColor('#1e3a5f',C.orange,i/(d.length-1))),
+            line:{color:'rgba(0,0,0,0)',width:0}},
+    hovertemplate:'<b>%{x}</b> one-way<br>%{y} respondents<extra></extra>'
   }], PLOTLY_LAYOUT({
     yaxis:{...PLOTLY_LAYOUT().yaxis,title:'N respondents'},
-    xaxis:{...PLOTLY_LAYOUT().xaxis,title:'% time working remotely'},
-    shapes:[{type:'line',x0:'50%-60%',x1:'50%-60%',y0:0,y1:1,xref:'x',yref:'paper',line:{color:C.orange,dash:'dot',width:1.5}}]
+    xaxis:{...PLOTLY_LAYOUT().xaxis,title:'One-way commute time'},
+    bargap:0.25, margin:{l:55,r:16,t:20,b:50}
   }), PLOTLY_CONFIG)
 }
 
-async function plotCommute() {
-  const d = await load('commute_by_remote')
-  Plotly.newPlot('plot-commute', [{
-    type:'bar', x:d.map(r=>r.pct_band), y:d.map(r=>r.mean_commute),
-    marker:{color:['#3d4555','#4a6fa5',C.blue,C.green,C.orange]},
-    hovertemplate:'%{x} remote: <b>%{y:.1f}</b> min/day commute (n=%{customdata})<extra></extra>',
+async function plotCommuteScenarios() {
+  const d = await load('commute_scenarios')
+  const sc = d.scenarios
+  Plotly.newPlot('plot-commute-scenarios', [
+    {x:sc.map(r=>r.remote_days), y:sc.map(r=>r.hours_saved_avg),
+     type:'bar', name:'Hours saved/week',
+     marker:{color:sc.map((r,i)=>lerpColor(C.blue,C.green,i/4)), line:{width:0}},
+     text:sc.map(r=>r.hours_saved_avg+'h'), textposition:'outside', textfont:{color:C.txt,size:10},
+     hovertemplate:'<b>%{x} remote day(s)/week</b><br>%{y:.1f} hours reclaimed<extra></extra>'}
+  ], PLOTLY_LAYOUT({
+    yaxis:{...PLOTLY_LAYOUT().yaxis,title:'Hours reclaimed / week', range:[0,7]},
+    xaxis:{...PLOTLY_LAYOUT().xaxis,title:'Remote days per week', dtick:1},
+    margin:{l:55,r:16,t:20,b:50},
+    annotations:[{x:0.5,y:6.6,text:`Based on avg one-way commute of ${d.avg_commute} min`,
+      font:{color:C.muted,size:8.5},showarrow:false,xanchor:'left'}]
+  }), PLOTLY_CONFIG)
+}
+
+// ═══════════════════════════════════════════════════════════
+// PAGE 5b: FAMILY & PAY
+// ═══════════════════════════════════════════════════════════
+const FAMILY_COLORS = {
+  'Living alone':'#7c6af7',
+  'Couple, no children':'#4a9eff',
+  'Household with children':'#f7a25c',
+  'Multi-adult, no children':'#52c99e'
+}
+const FAMILY_ORDER = ['Living alone','Couple, no children','Multi-adult, no children','Household with children']
+
+async function initFamilyPay() {
+  await Promise.all([
+    updateFamily(), plotFamilyDist(),
+    plotSalaryAvg(), plotSalaryDist(), plotSalarySector()
+  ])
+}
+initFamilyPay.done = false
+
+async function updateFamily() {
+  const metric = document.getElementById('fam-metric').value
+  const titleEl = document.getElementById('fam-title')
+  if (metric === 'who5') {
+    titleEl.textContent = 'WHO-5 well-being by WFH frequency × family type (EWCTS 2021)'
+    const data = await load('who5_family')
+    const fams = FAMILY_ORDER.filter(f => data.some(d=>d.family_type===f))
+    const traces = fams.map(f => ({
+      x:WFH_ORDER, y:WFH_ORDER.map(w=>{const r=data.find(d=>d.family_type===f&&d.wfh===w);return r?r.who5:null}),
+      mode:'lines+markers', name:f,
+      line:{color:FAMILY_COLORS[f],width:2.5,shape:'spline'},
+      marker:{size:8,color:FAMILY_COLORS[f],line:{color:'#0f1117',width:1.5}},
+      error_y:{type:'data',array:WFH_ORDER.map(w=>{const r=data.find(d=>d.family_type===f&&d.wfh===w);return r?r.se*1.96:0}),
+               visible:true,color:'rgba(255,255,255,0.2)',thickness:1,width:3},
+      hovertemplate:`${f}<br><b>%{x}</b>: %{y:.1f} WHO-5<extra></extra>`
+    }))
+    Plotly.react('plot-family-main', traces, PLOTLY_LAYOUT({
+      yaxis:{...PLOTLY_LAYOUT().yaxis,range:[55,80],title:'WHO-5 Index (0–100)'},
+      xaxis:{...PLOTLY_LAYOUT().xaxis,title:'WFH frequency'},
+      showlegend:true, legend:{orientation:'h',y:-0.18,font:{size:9}},
+      margin:{l:55,r:16,t:20,b:70}
+    }), PLOTLY_CONFIG)
+  } else {
+    titleEl.textContent = 'Work-life balance satisfaction by WFH frequency × family type (EWCTS 2021)'
+    const data = await load('wlb_family')
+    // % satisfied (Very well + Well) by wfh x family
+    const fams = FAMILY_ORDER.filter(f => data.some(d=>d.family_type===f))
+    const traces = fams.map(f => ({
+      x:WFH_ORDER, y:WFH_ORDER.map(w=>{
+        const rows = data.filter(d=>d.family_type===f&&d.wfh===w&&(d.wlb==='Very well'||d.wlb==='Well'))
+        return rows.reduce((s,r)=>s+r.pct,0)
+      }),
+      mode:'lines+markers', name:f,
+      line:{color:FAMILY_COLORS[f],width:2.5,shape:'spline'},
+      marker:{size:8,color:FAMILY_COLORS[f],line:{color:'#0f1117',width:1.5}},
+      hovertemplate:`${f}<br><b>%{x}</b>: %{y:.1f}% satisfied<extra></extra>`
+    }))
+    Plotly.react('plot-family-main', traces, PLOTLY_LAYOUT({
+      yaxis:{...PLOTLY_LAYOUT().yaxis,title:'% reporting good WLB',ticksuffix:'%',range:[50,100]},
+      xaxis:{...PLOTLY_LAYOUT().xaxis,title:'WFH frequency'},
+      showlegend:true, legend:{orientation:'h',y:-0.18,font:{size:9}},
+      margin:{l:55,r:16,t:20,b:70}
+    }), PLOTLY_CONFIG)
+  }
+}
+
+async function plotFamilyDist() {
+  const data = await load('family_dist')
+  const fams = FAMILY_ORDER.filter(f => data.some(d=>d.family_type===f))
+  const traces = fams.map(f => ({
+    type:'bar', name:f, x:WFH_ORDER,
+    y:WFH_ORDER.map(w=>{const r=data.find(d=>d.family_type===f&&d.wfh===w);return r?r.pct:0}),
+    marker:{color:FAMILY_COLORS[f]},
+    hovertemplate:`%{x} — ${f}: <b>%{y:.1f}%</b><extra></extra>`
+  }))
+  Plotly.newPlot('plot-family-dist', traces, PLOTLY_LAYOUT({
+    barmode:'stack', yaxis:{...PLOTLY_LAYOUT().yaxis,ticksuffix:'%',title:'% of workers'},
+    xaxis:{...PLOTLY_LAYOUT().xaxis,title:'WFH frequency'},
+    showlegend:true, legend:{orientation:'h',y:-0.2,font:{size:9}}, margin:{l:55,r:16,t:16,b:70}
+  }), PLOTLY_CONFIG)
+}
+
+async function plotSalaryAvg() {
+  const d = await load('hi_salary_avg')
+  const arrColors={Remote:C.green,Onsite:C.blue,Hybrid:C.orange}
+  Plotly.newPlot('plot-salary-avg', [{
+    type:'bar', x:d.map(r=>r.work_arrangement), y:d.map(r=>r.mean_salary),
+    error_y:{type:'data',array:d.map(r=>r.se*1.96),visible:true,color:C.txt,thickness:1.5,width:5},
+    marker:{color:d.map(r=>arrColors[r.work_arrangement]||C.blue)},
+    text:d.map(r=>'$'+r.mean_salary+'K'), textposition:'outside', textfont:{color:C.txt,size:11},
+    hovertemplate:'%{x}: <b>$%{y:.0f}K</b> avg (n=%{customdata})<extra></extra>',
     customdata:d.map(r=>r.n)
   }], PLOTLY_LAYOUT({
-    yaxis:{...PLOTLY_LAYOUT().yaxis,title:'Mean daily commute (min)'},
-    xaxis:{...PLOTLY_LAYOUT().xaxis,title:'% time remote'}
+    yaxis:{...PLOTLY_LAYOUT().yaxis,title:'Avg salary ($K)',range:[0,Math.max(...d.map(r=>r.mean_salary))*1.2]},
+    margin:{l:55,r:16,t:20,b:40}
+  }), PLOTLY_CONFIG)
+}
+
+async function plotSalaryDist() {
+  const d = await load('hi_salary')
+  const bands = ['$40K-60K','$60K-80K','$80K-100K','$100K-120K','$120K+']
+  const arrs = [...new Set(d.map(r=>r.work_arrangement))]
+  const bandColors = bands.map((b,i)=>lerpColor('#1e3a5f',C.orange,i/(bands.length-1)))
+  const traces = bands.map((b,i) => ({
+    type:'bar', name:b, x:arrs,
+    y:arrs.map(a=>{const r=d.find(x=>x.work_arrangement===a&&x.salary_range===b);return r?r.pct:0}),
+    marker:{color:bandColors[i]},
+    hovertemplate:`%{x} — ${b}: <b>%{y:.1f}%</b><extra></extra>`
+  }))
+  Plotly.newPlot('plot-salary-dist', traces, PLOTLY_LAYOUT({
+    barmode:'stack', yaxis:{...PLOTLY_LAYOUT().yaxis,ticksuffix:'%',title:'% of workers'},
+    showlegend:true, legend:{orientation:'h',y:-0.2,font:{size:8}}, margin:{l:55,r:16,t:16,b:60}
+  }), PLOTLY_CONFIG)
+}
+
+async function plotSalarySector() {
+  const d = await load('hi_salary_sector')
+  const arrs = [...new Set(d.map(r=>r.work_arrangement))]
+  const sectors = [...new Set(d.map(r=>r.sector))]
+  const arrColors={Remote:C.green,Onsite:C.blue,Hybrid:C.orange}
+  const traces = arrs.map(a => ({
+    type:'bar', name:a, orientation:'h', y:sectors,
+    x:sectors.map(s=>{const r=d.find(x=>x.sector===s&&x.work_arrangement===a);return r?r.mean_salary:null}),
+    marker:{color:arrColors[a]||C.blue},
+    hovertemplate:`%{y} — ${a}: <b>$%{x:.0f}K</b><extra></extra>`
+  }))
+  Plotly.newPlot('plot-salary-sector', traces, PLOTLY_LAYOUT({
+    barmode:'group', xaxis:{...PLOTLY_LAYOUT().xaxis,title:'Avg salary ($K)'},
+    margin:{l:160,r:16,t:16,b:50}, showlegend:true, legend:{orientation:'h',y:-0.15,font:{size:9}}
   }), PLOTLY_CONFIG)
 }
 
