@@ -136,6 +136,7 @@ input[type=range]{padding:6px 0;accent-color:var(--accent)}
   <button class="nav-btn" onclick="showPage('firmsize',this)">Firm Size</button>
   <button class="nav-btn" onclick="showPage('deepdive',this)">Country Deep-Dive</button>
   <button class="nav-btn" onclick="showPage('longitudinal',this)">2015→2024</button>
+  <button class="nav-btn" onclick="showPage('models',this)">Models</button>
   <button class="nav-btn" onclick="showPage('about',this)">About</button>
 </nav>
 
@@ -512,6 +513,34 @@ input[type=range]{padding:6px 0;accent-color:var(--accent)}
 <!-- ══════════════════════════════════════════════════════
      PAGE 8: ABOUT
 ══════════════════════════════════════════════════════ -->
+<div id="page-models" class="page">
+  <div class="section-head">Regression Models — Quantifying the Trade-off</div>
+  <p class="lead">Descriptive charts show patterns; regression isolates effects. These four models estimate the association between remote work and well-being while holding age, gender, hours and other factors constant. <b>Association, not causation</b> — these are observational survey data.</p>
+
+  <div class="row">
+    <div class="col-3">
+      <div class="sidebar">
+        <label class="ctrl-label">Select model</label>
+        <select id="model-pick" onchange="renderModel()">
+          <option value="M1">M1 — Well-being ~ WFH</option>
+          <option value="M2">M2 — Burnout ~ WFH (logit)</option>
+          <option value="M3">M3 — WFH × children</option>
+          <option value="M4">M4 — WFH × post-COVID</option>
+        </select>
+        <div class="note" id="model-desc"></div>
+        <div class="note" id="model-fit"></div>
+      </div>
+    </div>
+    <div class="col-9">
+      <div class="card"><div class="card-title">Coefficient plot — estimate ± 95% CI</div><div class="plot-wrap tall" id="plot-model-coef"></div></div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-6"><div class="card"><div class="card-title" id="pred-title">Predicted values</div><div class="plot-wrap" id="plot-model-pred"></div></div></div>
+    <div class="col-6"><div class="card"><div class="card-title">Regression table</div><div id="model-table" style="overflow-x:auto"></div></div></div>
+  </div>
+</div>
+
 <div id="page-about" class="page">
   <div class="about-body">
     <h2>Remote Work in Europe: Productivity & Well-being</h2>
@@ -536,6 +565,7 @@ input[type=range]{padding:6px 0;accent-color:var(--accent)}
       <li><b>Family type</b>: derived from EWCTS 2021 household composition — size combined with presence of children under 16 (Living alone / Couple, no children / Multi-adult, no children / Household with children).</li>
       <li><b>Salary</b>: Health Impact 2025 salary bands; averages computed using band midpoints ($50K–$130K).</li>
       <li><b>Commute time saved</b>: estimated as remote days × one-way commute × 2, from R-MAP self-reported commute minutes.</li>
+      <li><b>Regression models</b>: estimated in R on individual-level Eurofound microdata (survey-weighted OLS and logistic regression). Only model outputs — coefficients, standard errors, fit statistics — are published here; effects are associational, not causal.</li>
       <li><b>Aggregated data only</b>: this dashboard displays pre-computed group means and percentages. No individual-level microdata is included.</li>
     </ul>
     <h4>Project</h4>
@@ -600,7 +630,7 @@ function showPage(id, btn) {
     agegender: initAgeGender,
     familypay: initFamilyPay, distributions: initDistributions,
     firmsize: initFirmSize,
-    deepdive: initDeepDive, longitudinal: initLongitudinal
+    deepdive: initDeepDive, longitudinal: initLongitudinal, models: initModels
   }
   if (inits[id] && !inits[id].done) { inits[id](); inits[id].done=true }
 }
@@ -2016,6 +2046,161 @@ async function plotGalSankey() {
     .attr('text-anchor',d=>d.x0<W/2?'start':'end')
     .attr('font-size','10px').attr('font-family','Inter').attr('fill','#1a1d23')
     .text(d=>d.name)
+}
+
+
+// MODELS
+const MODEL_META = {
+  M1:{full:'M1: WHO-5 ~ WFH + controls',
+      desc:'OLS. Outcome: WHO-5 well-being (0\u2013100). Predictor: remote-work frequency (ref = Never), controlling for age, gender and weekly hours. EWCTS 2021.',
+      type:'ols', pred:'pred_m1'},
+  M2:{full:'M2: P(burnout) ~ WFH + controls',
+      desc:'Logistic regression. Outcome: any burnout (yes/no). Coefficients shown as odds ratios; values below 1 mean lower burnout odds vs never-remote. EWCTS 2021.',
+      type:'logit', pred:null},
+  M3:{full:'M3: WHO-5 ~ WFH x children',
+      desc:'OLS with interaction. Tests whether high remote work (often/always) affects parents differently. The interaction term is the key estimate. EWCTS 2021.',
+      type:'ols', pred:'pred_m3'},
+  M4:{full:'M4: WHO-5 ~ WFH x post-COVID',
+      desc:'OLS with interaction across waves (2015 vs 2024). Tests whether the well-being effect of remote work changed after the pandemic. The interaction is the key estimate.',
+      type:'ols', pred:'pred_m4'}
+}
+const TERM_LABELS = {
+  '(Intercept)':'Intercept', 'wfhRarely':'WFH: Rarely', 'wfhSometimes':'WFH: Sometimes',
+  'wfhOften':'WFH: Often', 'wfhAlways':'WFH: Always', 'age':'Age', 'female':'Female',
+  'usual_hours':'Weekly hours', 'high_wfh':'High WFH', 'has_kids':'Has children',
+  'high_wfh:has_kids':'High WFH \u00d7 children', 'post_covid':'Post-COVID (2024)',
+  'high_wfh:post_covid':'High WFH \u00d7 post-COVID'
+}
+
+async function initModels() {
+  await load('models')
+  renderModel()
+}
+initModels.done = false
+
+async function renderModel() {
+  const pick = document.getElementById('model-pick').value
+  const meta = MODEL_META[pick]
+  const all = await load('models')
+  const rows = all.filter(r => r.model === meta.full)
+  document.getElementById('model-desc').innerHTML = meta.desc
+  const r2label = meta.type==='logit' ? 'McFadden pseudo-R\u00b2' : 'R\u00b2'
+  document.getElementById('model-fit').innerHTML =
+    `<b>N</b> = ${rows[0].n.toLocaleString()} &nbsp;|&nbsp; <b>${r2label}</b> = ${rows[0].r2}`
+
+  // Coefficient plot (drop intercept for readability)
+  const co = rows.filter(r => r.term !== '(Intercept)')
+  const isLogit = meta.type==='logit'
+  const est = co.map(r => isLogit ? r.odds : r.estimate)
+  const lo  = co.map(r => isLogit ? r.odds_low : r.ci_low)
+  const hi  = co.map(r => isLogit ? r.odds_high : r.ci_high)
+  const labels = co.map(r => TERM_LABELS[r.term] || r.term)
+  const refLine = isLogit ? 1 : 0
+  const colors = co.map(r => {
+    const e = isLogit ? r.odds : r.estimate
+    const sig = r.p_value < 0.05
+    if (!sig) return '#c4c8ce'
+    return (isLogit ? e<1 : e<0) ? C.blue : C.orange
+  })
+
+  Plotly.newPlot('plot-model-coef', [{
+    type:'scatter', mode:'markers', orientation:'h',
+    y:labels, x:est,
+    error_x:{type:'data', symmetric:false,
+             array:hi.map((h,i)=>h-est[i]), arrayminus:est.map((e,i)=>e-lo[i]),
+             color:'#9aa0a8', thickness:1.5, width:5},
+    marker:{color:colors, size:11, line:{color:'#fff',width:1.5}},
+    hovertemplate:'%{y}<br>'+(isLogit?'OR':'\u03b2')+' = <b>%{x:.3f}</b><extra></extra>'
+  }], PLOTLY_LAYOUT({
+    xaxis:{...PLOTLY_LAYOUT().xaxis, title:isLogit?'Odds ratio':'Coefficient (WHO-5 points)'},
+    yaxis:{...PLOTLY_LAYOUT().yaxis, automargin:true},
+    shapes:[{type:'line',x0:refLine,x1:refLine,y0:-0.5,y1:labels.length-0.5,
+             line:{color:C.red,width:1.5,dash:'dash'}}],
+    margin:{l:150,r:20,t:16,b:45}
+  }), PLOTLY_CONFIG)
+
+  // Regression table
+  let html = '<table style="width:100%;border-collapse:collapse;font-size:.82rem">'
+  html += '<tr style="border-bottom:2px solid #e8eaed;text-align:left">'
+  html += '<th style="padding:7px 8px">Term</th><th style="padding:7px 8px;text-align:right">'+(isLogit?'OR':'\u03b2')+'</th>'
+  html += '<th style="padding:7px 8px;text-align:right">SE</th><th style="padding:7px 8px;text-align:right">p</th></tr>'
+  rows.forEach(r => {
+    const val = isLogit && r.term!=='(Intercept)' ? r.odds : r.estimate
+    const stars = r.p_value<0.001?'***':r.p_value<0.01?'**':r.p_value<0.05?'*':''
+    const pf = r.p_value<0.001 ? '&lt;0.001' : r.p_value.toPrecision(2)
+    html += `<tr style="border-bottom:1px solid #f0f1f3">
+      <td style="padding:6px 8px">${TERM_LABELS[r.term]||r.term}</td>
+      <td style="padding:6px 8px;text-align:right;font-variant-numeric:tabular-nums">${val.toFixed(3)}</td>
+      <td style="padding:6px 8px;text-align:right;color:#9aa0a8;font-variant-numeric:tabular-nums">${r.se.toFixed(3)}</td>
+      <td style="padding:6px 8px;text-align:right;font-variant-numeric:tabular-nums">${pf} <span style="color:#1b7837">${stars}</span></td></tr>`
+  })
+  html += '</table><div style="font-size:.72rem;color:#9aa0a8;margin-top:8px">*** p&lt;0.001 &nbsp; ** p&lt;0.01 &nbsp; * p&lt;0.05</div>'
+  document.getElementById('model-table').innerHTML = html
+
+  renderPrediction(pick, meta)
+}
+
+async function renderPrediction(pick, meta) {
+  const el = document.getElementById('plot-model-pred')
+  const title = document.getElementById('pred-title')
+  if (!meta.pred) {
+    title.textContent = 'Odds ratios (see coefficient plot)'
+    Plotly.purge('plot-model-pred')
+    el.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#9aa0a8;font-size:.85rem;text-align:center;padding:20px">This logistic model is best read through the odds ratios in the coefficient plot on the left.</div>'
+    return
+  }
+  el.innerHTML = ''
+  const d = await load(meta.pred)
+
+  if (pick==='M1') {
+    title.textContent = 'Predicted WHO-5 by remote frequency (at mean covariates)'
+    Plotly.newPlot('plot-model-pred', [{
+      x:d.map(r=>r.wfh), y:d.map(r=>r.fit),
+      error_y:{type:'data',symmetric:false,array:d.map(r=>r.hi-r.fit),arrayminus:d.map(r=>r.fit-r.lo),
+               color:'#9aa0a8',thickness:1.5,width:5},
+      type:'scatter',mode:'lines+markers',
+      line:{color:C.blue,width:2.5,shape:'spline'},
+      marker:{color:d.map(r=>WFH_COLORS[r.wfh]),size:11,line:{color:'#fff',width:1.5}},
+      hovertemplate:'%{x}: <b>%{y:.1f}</b> WHO-5<extra></extra>'
+    }], PLOTLY_LAYOUT({
+      yaxis:{...PLOTLY_LAYOUT().yaxis,title:'Predicted WHO-5',range:[58,68]},
+      margin:{l:50,r:16,t:16,b:40}
+    }), PLOTLY_CONFIG)
+  } else if (pick==='M3') {
+    title.textContent = 'Predicted WHO-5: remote work \u00d7 having children'
+    const noKids = d.filter(r=>r.has_kids===0).sort((a,b)=>a.high_wfh-b.high_wfh)
+    const kids = d.filter(r=>r.has_kids===1).sort((a,b)=>a.high_wfh-b.high_wfh)
+    const xlab = ['Low/no remote','High remote']
+    Plotly.newPlot('plot-model-pred', [
+      {x:xlab,y:noKids.map(r=>r.fit),name:'No children',mode:'lines+markers',
+       line:{color:C.blue,width:2.5},marker:{size:10,color:C.blue,line:{color:'#fff',width:1.5}},
+       hovertemplate:'No children, %{x}: <b>%{y:.1f}</b><extra></extra>'},
+      {x:xlab,y:kids.map(r=>r.fit),name:'Has children',mode:'lines+markers',
+       line:{color:C.orange,width:2.5},marker:{size:10,color:C.orange,line:{color:'#fff',width:1.5}},
+       hovertemplate:'Has children, %{x}: <b>%{y:.1f}</b><extra></extra>'}
+    ], PLOTLY_LAYOUT({
+      yaxis:{...PLOTLY_LAYOUT().yaxis,title:'Predicted WHO-5'},
+      showlegend:true, legend:{x:.02,y:.02,bgcolor:'rgba(255,255,255,0.7)'},
+      margin:{l:50,r:16,t:16,b:40}
+    }), PLOTLY_CONFIG)
+  } else if (pick==='M4') {
+    title.textContent = 'Predicted WHO-5: remote work \u00d7 wave'
+    const pre = d.filter(r=>r.post_covid===0).sort((a,b)=>a.high_wfh-b.high_wfh)
+    const post = d.filter(r=>r.post_covid===1).sort((a,b)=>a.high_wfh-b.high_wfh)
+    const xlab = ['Low/no remote','High remote']
+    Plotly.newPlot('plot-model-pred', [
+      {x:xlab,y:pre.map(r=>r.fit),name:'2015 (pre-COVID)',mode:'lines+markers',
+       line:{color:WAVE_COLORS['2015'],width:2.5},marker:{size:10,color:WAVE_COLORS['2015'],line:{color:'#fff',width:1.5}},
+       hovertemplate:'2015, %{x}: <b>%{y:.1f}</b><extra></extra>'},
+      {x:xlab,y:post.map(r=>r.fit),name:'2024 (post-COVID)',mode:'lines+markers',
+       line:{color:WAVE_COLORS['2024'],width:2.5},marker:{size:10,color:WAVE_COLORS['2024'],line:{color:'#fff',width:1.5}},
+       hovertemplate:'2024, %{x}: <b>%{y:.1f}</b><extra></extra>'}
+    ], PLOTLY_LAYOUT({
+      yaxis:{...PLOTLY_LAYOUT().yaxis,title:'Predicted WHO-5'},
+      showlegend:true, legend:{x:.02,y:.02,bgcolor:'rgba(255,255,255,0.7)'},
+      margin:{l:50,r:16,t:16,b:40}
+    }), PLOTLY_CONFIG)
+  }
 }
 
 async function initDeepDive() {
