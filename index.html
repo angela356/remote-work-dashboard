@@ -10,6 +10,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <!-- Plotly -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.27.1/plotly.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3-sankey/0.12.3/d3-sankey.min.js"></script>
 <!-- Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
 
@@ -123,6 +125,7 @@ input[type=range]{padding:6px 0;accent-color:var(--accent)}
   <div class="brand">REMOTE WORK · EUROPE</div>
   <button class="nav-btn active" onclick="showPage('overview',this)">Overview</button>
   <button class="nav-btn" onclick="showPage('keyfindings',this)">Key Findings</button>
+  <button class="nav-btn" onclick="showPage('gallery',this)">Gallery</button>
   <button class="nav-btn" onclick="showPage('map',this)">Map</button>
   <button class="nav-btn" onclick="showPage('wellbeing',this)">Well-being</button>
   <button class="nav-btn" onclick="showPage('productivity',this)">Productivity</button>
@@ -168,6 +171,28 @@ input[type=range]{padding:6px 0;accent-color:var(--accent)}
 <!-- ══════════════════════════════════════════════════════
      PAGE 2: MAP
 ══════════════════════════════════════════════════════ -->
+<div id="page-gallery" class="page">
+  <div class="section-head">Gallery — Data, Differently</div>
+  <p class="lead">The same evidence, seen through richer visual forms. Each view trades a little precision for a lot of intuition — built to be felt at a glance.</p>
+
+  <div class="row">
+    <div class="col-12"><div class="card"><div class="card-title">The shifting mix — how Europe's work location split evolved (streamgraph)</div><div id="gal-stream" style="width:100%;height:340px"></div></div></div>
+  </div>
+  <div class="row">
+    <div class="col-12"><div class="card"><div class="card-title">The remote wave across Europe — one map per year (2010–2025)</div><div id="gal-smallmult" style="width:100%"></div></div></div>
+  </div>
+  <div class="row">
+    <div class="col-6"><div class="card"><div class="card-title">Well-being by economic sector — radial view (EWCTS 2021)</div><div id="gal-radial" style="width:100%;height:440px"></div></div></div>
+    <div class="col-6"><div class="card"><div class="card-title">A decade of remote work — country × year heatmap</div><div class="plot-wrap tall" id="gal-heatmap"></div></div></div>
+  </div>
+  <div class="row">
+    <div class="col-12"><div class="card"><div class="card-title">From sector to remote intensity to well-being — the flow (Sankey, EWCTS 2021)</div><div id="gal-sankey" style="width:100%;height:420px"></div></div></div>
+  </div>
+  <div class="row">
+    <div class="col-12"><div class="card"><div class="card-title">Where each country stood — 2015 vs 2021 vs 2024 (barbell)</div><div class="plot-wrap tall" id="gal-barbell" style="height:520px"></div></div></div>
+  </div>
+</div>
+
 <div id="page-keyfindings" class="page">
   <div class="section-head">Key Findings — The Story in Six Charts</div>
   <p class="lead">A guided tour through the central question: does working from home cost workers their well-being? The short answer the data gives is <i>less than you would think</i> — and the picture is shaped as much by <i>who</i> works remotely as by remote work itself.</p>
@@ -570,7 +595,7 @@ function showPage(id, btn) {
   btn.classList.add('active')
   // Lazy-init pages
   const inits = {
-    overview: initOverview, keyfindings: initKeyFindings, map: initMap, wellbeing: initWellbeing,
+    overview: initOverview, keyfindings: initKeyFindings, gallery: initGallery, map: initMap, wellbeing: initWellbeing,
     productivity: initProductivity, perceptions: initPerceptions,
     agegender: initAgeGender,
     familypay: initFamilyPay, distributions: initDistributions,
@@ -1720,17 +1745,18 @@ async function plotKfSlope() {
   const get = (w,wfh)=>{const r=d.find(x=>x.wave===w&&x.wfh===wfh);return r?r.who5:null}
   const traces = WFH_ORDER.map(wfh => {
     const y15=get('2015',wfh), y24=get('2024',wfh)
-    const rising = y24>=y15
-    return {x:['2015','2024'], y:[y15,y24], mode:'lines+markers+text',
-      name:wfh, line:{color:WFH_COLORS[wfh],width:2.5},
-      marker:{size:8,color:WFH_COLORS[wfh],line:{color:'#fff',width:1.5}},
-      text:['', wfh], textposition:'middle right', textfont:{size:9,color:WFH_COLORS[wfh]},
+    return {x:[0,1], y:[y15,y24], mode:'lines+markers+text',
+      name:wfh, line:{color:WFH_COLORS[wfh],width:3},
+      marker:{size:9,color:WFH_COLORS[wfh],line:{color:'#fff',width:1.5}},
+      text:['', '  '+wfh], textposition:'middle right', textfont:{size:10,color:WFH_COLORS[wfh]},
+      cliponaxis:false,
       hovertemplate:`${wfh} %{x}: <b>%{y:.1f}</b><extra></extra>`, showlegend:false}
   })
   Plotly.newPlot('plot-kf-slope', traces, PLOTLY_LAYOUT({
-    xaxis:{...PLOTLY_LAYOUT().xaxis, title:'', range:[-0.15,1.4], tickvals:[0,1], ticktext:['2015','2024']},
-    yaxis:{...PLOTLY_LAYOUT().yaxis, title:'WHO-5 well-being', range:[60,72]},
-    margin:{l:55,r:60,t:30,b:40}
+    xaxis:{...PLOTLY_LAYOUT().xaxis, title:'', range:[-0.1,1.55],
+           tickvals:[0,1], ticktext:['2015','2024'], showgrid:false},
+    yaxis:{...PLOTLY_LAYOUT().yaxis, title:'WHO-5 well-being', range:[64,72]},
+    margin:{l:55,r:70,t:30,b:40}
   }), PLOTLY_CONFIG)
 }
 
@@ -1808,6 +1834,188 @@ async function plotKfBump() {
     showlegend:true, legend:{font:{size:9}},
     margin:{l:50,r:16,t:20,b:40}
   }), PLOTLY_CONFIG)
+}
+
+
+// GALLERY
+async function initGallery() {
+  await Promise.all([
+    plotGalStream(), plotGalRadial(), plotGalHeatmap(), plotGalBarbell()
+  ])
+  plotGalSmallMult()
+  plotGalSankey()
+}
+initGallery.done = false
+
+// #2 Streamgraph (Plotly stacked area, wiggle-style centered)
+async function plotGalStream() {
+  const d = await load('gal_stream')
+  d.sort((a,b)=>a.year-b.year)
+  const freqs = [{k:'NVR',label:'Never',color:'#cfd4da'},
+                 {k:'SMT',label:'Sometimes',color:'#2166ac'},
+                 {k:'USU',label:'Usually',color:'#e08214'}]
+  const traces = freqs.map(f => ({
+    x:d.map(r=>r.year), y:d.map(r=>r[f.k]), name:f.label,
+    mode:'lines', stackgroup:'one', groupnorm:'',
+    line:{width:0.5,color:f.color,shape:'spline'},
+    fillcolor:f.color,
+    hovertemplate:`${f.label} %{x}: <b>%{y:.1f}%</b><extra></extra>`
+  }))
+  Plotly.newPlot('gal-stream', traces, PLOTLY_LAYOUT({
+    yaxis:{...PLOTLY_LAYOUT().yaxis, title:'% of employed', ticksuffix:'%'},
+    xaxis:{...PLOTLY_LAYOUT().xaxis, title:''},
+    showlegend:true, legend:{orientation:'h',y:-0.15},
+    shapes:[{type:'line',x0:2020,x1:2020,y0:0,y1:1,yref:'paper',line:{color:C.muted,width:1,dash:'dot'}}],
+    margin:{l:50,r:16,t:16,b:55}
+  }), PLOTLY_CONFIG)
+}
+
+// #3 Radial bar (Plotly barpolar)
+async function plotGalRadial() {
+  const d = await load('gal_radial')
+  // shorten sector names
+  const short = s => s.length>22 ? s.slice(0,20)+'\u2026' : s
+  Plotly.newPlot('gal-radial', [{
+    type:'barpolar',
+    r:d.map(x=>x.who5), theta:d.map(x=>short(x.sector)),
+    marker:{color:d.map(x=>x.who5),
+      colorscale:[[0,'#c0392b'],[0.5,'#e08214'],[1,'#1b7837']], showscale:false,
+      line:{color:'#fff',width:1}},
+    hovertemplate:'%{theta}<br>WHO-5: <b>%{r:.1f}</b><extra></extra>'
+  }], {
+    paper_bgcolor:'#ffffff',
+    font:{color:C.ink2,family:'Inter',size:9},
+    polar:{
+      bgcolor:'#fff',
+      radialaxis:{range:[55,72],tickfont:{size:8,color:C.muted},gridcolor:GRID,angle:90},
+      angularaxis:{tickfont:{size:7.5,color:C.ink2},gridcolor:GRID,rotation:90,direction:'clockwise'}
+    },
+    margin:{l:40,r:40,t:30,b:30}
+  }, PLOTLY_CONFIG)
+}
+
+// #4 Heatmap (Plotly)
+async function plotGalHeatmap() {
+  const d = await load('gal_heatmap')
+  const years = [...new Set(d.map(r=>r.year))].sort()
+  // order countries by latest value desc
+  const latest = years[years.length-1]
+  const order = d.filter(r=>r.year===latest).sort((a,b)=>b.pct-a.pct).map(r=>r.country)
+  const countries = order.filter((c,i)=>order.indexOf(c)===i).slice(0,30).reverse()
+  const z = countries.map(ct => years.map(y=>{const r=d.find(x=>x.country===ct&&x.year===y);return r?r.pct:null}))
+  Plotly.newPlot('gal-heatmap', [{
+    type:'heatmap', z:z, x:years, y:countries,
+    colorscale:[[0,'#f4f7f5'],[0.3,'#a8cbb7'],[0.6,'#4c9a6e'],[1,'#1b7837']],
+    hovertemplate:'%{y} %{x}: <b>%{z:.1f}%</b><extra></extra>',
+    colorbar:{title:{text:'%',side:'right'},thickness:10,len:0.7,tickfont:{size:8,color:C.muted}}
+  }], PLOTLY_LAYOUT({
+    xaxis:{...PLOTLY_LAYOUT().xaxis, title:'', side:'top', dtick:2},
+    yaxis:{...PLOTLY_LAYOUT().yaxis, title:'', tickfont:{size:8}, automargin:true},
+    margin:{l:90,r:20,t:30,b:20}
+  }), PLOTLY_CONFIG)
+}
+
+// #6 Barbell (Plotly)
+async function plotGalBarbell() {
+  const d = await load('gal_barbell')
+  const top = d.slice(0,22).reverse()
+  const traces = []
+  top.forEach(r => {
+    const ys=[r.country,r.country,r.country]
+    traces.push({x:[r.y2015,r.y2024], y:[r.country,r.country], mode:'lines',
+      line:{color:'#d4d7dc',width:2.5}, showlegend:false, hoverinfo:'skip'})
+  })
+  const mk = (key,color,name)=>({x:top.map(r=>r[key]),y:top.map(r=>r.country),mode:'markers',name:name,
+    marker:{color:color,size:9,line:{color:'#fff',width:1}},
+    hovertemplate:`%{y} \u2014 ${name}: <b>%{x:.1f}%</b><extra></extra>`})
+  traces.push(mk('y2015',WAVE_COLORS['2015'],'2015'))
+  traces.push(mk('y2021',WAVE_COLORS['2021'],'2021'))
+  traces.push(mk('y2024',WAVE_COLORS['2024'],'2024'))
+  Plotly.newPlot('gal-barbell', traces, PLOTLY_LAYOUT({
+    xaxis:{...PLOTLY_LAYOUT().xaxis, title:'% usually working from home', ticksuffix:'%'},
+    showlegend:true, legend:{orientation:'h',y:1.04,x:0.5,xanchor:'center'},
+    margin:{l:100,r:20,t:30,b:45}
+  }), PLOTLY_CONFIG)
+}
+
+
+// #1 Small multiples: mini choropleth grid (D3)
+async function plotGalSmallMult() {
+  const [sm, geo] = await Promise.all([load('gal_smallmult'), load('europe')])
+  const container = d3.select('#gal-smallmult')
+  container.html('')
+  const years = [...new Set(sm.map(r=>r.year))].sort()
+  const GEO_MAP = {EL:'GR', UK:'GB'}
+  const allVals = sm.map(r=>r.pct)
+  const maxV = d3.max(allVals)
+  const color = d3.scaleSequential(d3.interpolateRgb('#eef0f3','#1b7837')).domain([0,maxV])
+
+  const cols = 4
+  const cellW = container.node().clientWidth / cols - 12
+  const cellH = cellW * 0.72
+
+  const proj = d3.geoMercator().center([14,55]).scale(cellW*0.95).translate([cellW/2, cellH/2])
+  const path = d3.geoPath(proj)
+
+  years.forEach(yr => {
+    const valMap = {}
+    sm.filter(r=>r.year===yr).forEach(r=>{ valMap[GEO_MAP[r.geo]||r.geo]=r.pct })
+    const div = container.append('div').style('display','inline-block').style('margin','4px').style('vertical-align','top')
+    div.append('div').style('font-size','11px').style('font-weight','600').style('color','#4a4f57')
+       .style('text-align','center').style('margin-bottom','2px').text(yr)
+    const svg = div.append('svg').attr('width',cellW).attr('height',cellH)
+    svg.selectAll('path').data(geo.features).join('path')
+      .attr('d',path)
+      .attr('fill',f=>{const v=valMap[f.properties.ISO2];return v!=null?color(v):'#f4f5f7'})
+      .attr('stroke','#fff').attr('stroke-width',0.3)
+      .append('title').text(f=>{const v=valMap[f.properties.ISO2];return `${f.properties.NAME} ${yr}: ${v!=null?v+'%':'n/a'}`})
+  })
+}
+
+// #5 Sankey (d3-sankey)
+async function plotGalSankey() {
+  const flows = await load('gal_sankey')
+  const el = document.getElementById('gal-sankey')
+  el.innerHTML = ''
+  const W = el.clientWidth, H = 420
+  const svg = d3.select('#gal-sankey').append('svg').attr('width',W).attr('height',H)
+
+  // build node list
+  const nodeNames = [...new Set(flows.flatMap(f=>[f.source,f.target]))]
+  const nodeIdx = {}; nodeNames.forEach((n,i)=>nodeIdx[n]=i)
+  const nodes = nodeNames.map(n=>({name:n}))
+  const links = flows.map(f=>({source:nodeIdx[f.source],target:nodeIdx[f.target],value:f.value}))
+
+  const colorMap = {
+    'Knowledge work':'#2166ac','Public & care':'#1b7837','Manual & industry':'#e08214','Services & other':'#8c5fa8',
+    'Low remote':'#cfd4da','Mid remote':'#92b4d4','High remote':'#2166ac',
+    'Low well-being':'#c0392b','Moderate':'#e08214','High well-being':'#1b7837'
+  }
+
+  const sankey = d3.sankey().nodeWidth(16).nodePadding(14).extent([[8,12],[W-8,H-12]])
+  const graph = sankey({nodes:nodes.map(d=>({...d})), links:links.map(d=>({...d}))})
+
+  // links
+  svg.append('g').attr('fill','none').selectAll('path').data(graph.links).join('path')
+    .attr('d', d3.sankeyLinkHorizontal())
+    .attr('stroke', d=>colorMap[d.source.name]||'#c4c8ce')
+    .attr('stroke-width', d=>Math.max(1,d.width))
+    .attr('stroke-opacity',0.35)
+    .append('title').text(d=>`${d.source.name} \u2192 ${d.target.name}\n${d.value.toLocaleString()}`)
+
+  // nodes
+  const node = svg.append('g').selectAll('g').data(graph.nodes).join('g')
+  node.append('rect')
+    .attr('x',d=>d.x0).attr('y',d=>d.y0)
+    .attr('height',d=>Math.max(1,d.y1-d.y0)).attr('width',d=>d.x1-d.x0)
+    .attr('fill',d=>colorMap[d.name]||'#7a8394').attr('rx',2)
+    .append('title').text(d=>d.name)
+  node.append('text')
+    .attr('x',d=>d.x0<W/2?d.x1+6:d.x0-6)
+    .attr('y',d=>(d.y0+d.y1)/2).attr('dy','0.35em')
+    .attr('text-anchor',d=>d.x0<W/2?'start':'end')
+    .attr('font-size','10px').attr('font-family','Inter').attr('fill','#1a1d23')
+    .text(d=>d.name)
 }
 
 async function initDeepDive() {
