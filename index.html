@@ -523,9 +523,11 @@ input[type=range]{padding:6px 0;accent-color:var(--accent)}
         <label class="ctrl-label">Select model</label>
         <select id="model-pick" onchange="renderModel()">
           <option value="M1">M1 — Well-being ~ WFH</option>
+          <option value="M1b">M1b — + country fixed effects</option>
           <option value="M2">M2 — Burnout ~ WFH (logit)</option>
           <option value="M3">M3 — WFH × children</option>
           <option value="M4">M4 — WFH × post-COVID</option>
+          <option value="M5">M5 — Country-level analysis</option>
         </select>
         <div class="note" id="model-desc"></div>
         <div class="note" id="model-fit"></div>
@@ -2062,7 +2064,13 @@ const MODEL_META = {
       type:'ols', pred:'pred_m3'},
   M4:{full:'M4: WHO-5 ~ WFH x post-COVID',
       desc:'OLS with interaction across waves (2015 vs 2024). Tests whether the well-being effect of remote work changed after the pandemic. The interaction is the key estimate.',
-      type:'ols', pred:'pred_m4'}
+      type:'ols', pred:'pred_m4'},
+  M1b:{full:'M1b: + country fixed effects',
+      desc:'Same as M1 but adding country dummies (fixed effects), absorbing all stable national differences. The WFH effects shrink versus M1 — part of the raw association was cross-country confounding. Country dummies omitted from the plot for readability. EWCTS 2021.',
+      type:'ols', pred:null},
+  M5:{full:'M5: country mean WHO-5 ~ % high WFH',
+      desc:'Country-level (ecological) regression: each of 36 countries is one observation. Mean well-being regressed on the share of high-remote workers. Higher R² than individual models because aggregation removes person-level noise — but ecological correlations must not be read as individual effects.',
+      type:'ols', pred:null, scatter:'country_agg'}
 }
 const TERM_LABELS = {
   '(Intercept)':'Intercept', 'wfhRarely':'WFH: Rarely', 'wfhSometimes':'WFH: Sometimes',
@@ -2143,6 +2151,33 @@ async function renderModel() {
 async function renderPrediction(pick, meta) {
   const el = document.getElementById('plot-model-pred')
   const title = document.getElementById('pred-title')
+
+  if (meta.scatter) {
+    title.textContent = 'Country-level: well-being vs. remote-work adoption'
+    el.innerHTML = ''
+    const d = await load(meta.scatter)
+    const xs = d.map(r=>r.pct_high_wfh), ys = d.map(r=>r.mean_who5)
+    const n = xs.length, mx = xs.reduce((a,b)=>a+b,0)/n, my = ys.reduce((a,b)=>a+b,0)/n
+    let num=0, den=0
+    for(let i=0;i<n;i++){ num+=(xs[i]-mx)*(ys[i]-my); den+=(xs[i]-mx)**2 }
+    const slope=num/den, intc=my-slope*mx
+    const xr=[Math.min(...xs),Math.max(...xs)]
+    Plotly.newPlot('plot-model-pred', [
+      {x:xr, y:xr.map(x=>intc+slope*x), mode:'lines', line:{color:C.red,width:2,dash:'dash'},
+       name:'OLS fit', hoverinfo:'skip'},
+      {x:xs, y:ys, mode:'markers+text', type:'scatter',
+       text:d.map(r=>r.country), textposition:'top center', textfont:{size:7,color:C.muted},
+       marker:{color:C.blue, size:d.map(r=>Math.max(6,Math.min(18,Math.sqrt(r.n)/3))), opacity:0.7,
+               line:{color:'#fff',width:1}},
+       hovertemplate:'<b>%{text}</b><br>High-WFH: %{x:.1f}%<br>WHO-5: %{y:.1f}<extra></extra>'}
+    ], PLOTLY_LAYOUT({
+      xaxis:{...PLOTLY_LAYOUT().xaxis, title:'% often/always remote', ticksuffix:'%'},
+      yaxis:{...PLOTLY_LAYOUT().yaxis, title:'Mean WHO-5'},
+      showlegend:false, margin:{l:50,r:16,t:16,b:45}
+    }), PLOTLY_CONFIG)
+    return
+  }
+
   if (!meta.pred) {
     title.textContent = 'Odds ratios (see coefficient plot)'
     Plotly.purge('plot-model-pred')
