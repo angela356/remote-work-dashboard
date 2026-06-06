@@ -122,6 +122,7 @@ input[type=range]{padding:6px 0;accent-color:var(--accent)}
 <nav>
   <div class="brand">REMOTE WORK · EUROPE</div>
   <button class="nav-btn active" onclick="showPage('overview',this)">Overview</button>
+  <button class="nav-btn" onclick="showPage('keyfindings',this)">Key Findings</button>
   <button class="nav-btn" onclick="showPage('map',this)">Map</button>
   <button class="nav-btn" onclick="showPage('wellbeing',this)">Well-being</button>
   <button class="nav-btn" onclick="showPage('productivity',this)">Productivity</button>
@@ -167,6 +168,34 @@ input[type=range]{padding:6px 0;accent-color:var(--accent)}
 <!-- ══════════════════════════════════════════════════════
      PAGE 2: MAP
 ══════════════════════════════════════════════════════ -->
+<div id="page-keyfindings" class="page">
+  <div class="section-head">Key Findings — The Story in Six Charts</div>
+  <p class="lead">A guided tour through the central question: does working from home cost workers their well-being? The short answer the data gives is <i>less than you would think</i> — and the picture is shaped as much by <i>who</i> works remotely as by remote work itself.</p>
+
+  <div class="insight">
+    <b>Finding 1.</b> Well-being didn't collapse with remote work — it dipped during the forced-isolation of 2021, then recovered to <i>above</i> its pre-pandemic level by 2024, even as remote work stayed common.
+  </div>
+  <div class="row">
+    <div class="col-6"><div class="card"><div class="card-title">The journey: remote intensity vs. well-being, 2015 → 2021 → 2024</div><div class="plot-wrap tall" id="plot-kf-scatter"></div></div></div>
+    <div class="col-6"><div class="card"><div class="card-title">Well-being by remote frequency — how each group moved across waves</div><div class="plot-wrap tall" id="plot-kf-slope"></div></div></div>
+  </div>
+
+  <div class="insight">
+    <b>Finding 2.</b> The supposed trade-off runs backwards on burnout: workers who <i>never</i> work from home report the <i>most</i> burnout, while those always remote save hours of commuting each week.
+  </div>
+  <div class="row">
+    <div class="col-7"><div class="card"><div class="card-title">The paradox: burnout cost vs. commute benefit, by remote frequency</div><div class="plot-wrap tall" id="plot-kf-paradox"></div></div></div>
+    <div class="col-5"><div class="card"><div class="card-title">Out of 100 European workers, how many usually work from home?</div><div class="plot-wrap tall" id="plot-kf-waffle"></div></div></div>
+  </div>
+
+  <div class="insight">
+    <b>Finding 3.</b> Remote-work leadership shifted over the decade: the Nordics and Ireland pulled ahead, while adoption stayed flat in much of Eastern Europe.
+  </div>
+  <div class="row">
+    <div class="col-12"><div class="card"><div class="card-title">Country ranking flow — who leads on remote work (2014 → 2024)</div><div class="plot-wrap tall" id="plot-kf-bump"></div></div></div>
+  </div>
+</div>
+
 <div id="page-map" class="page">
   <div class="row">
     <div class="col-3">
@@ -495,13 +524,16 @@ input[type=range]{padding:6px 0;accent-color:var(--accent)}
 // ═══════════════════════════════════════════════════════════
 const C = {
   bg:'#ffffff', bg2:'#ffffff', bg3:'#f7f8fa', border:'#e8eaed',
-  blue:'#3b6ea5', purple:'#7a6ba8', orange:'#d98a3d', green:'#2f6f4f',
-  red:'#c0584f', pink:'#c47d9e', teal:'#3d8b8b',
-  txt:'#1a1d23', muted:'#9aa0a8', ink2:'#4a4f57', accent:'#2f6f4f'
+  blue:'#2166ac', purple:'#8c5fa8', orange:'#e08214', green:'#1b7837',
+  red:'#c0584f', pink:'#c994c7', teal:'#35978f',
+  txt:'#1a1d23', muted:'#9aa0a8', ink2:'#4a4f57', accent:'#1b7837'
 }
 const WFH_ORDER = ['Never','Rarely','Sometimes','Often','Always']
-const WFH_COLORS = {'Never':'#c4c8ce','Rarely':'#8fb0cf','Sometimes':C.blue,'Often':C.green,'Always':C.orange}
-const WAVE_COLORS = {'2015':C.purple,'2021':C.blue,'2024':C.orange}
+// Ordinal sequence: light grey -> slate -> blue -> amber -> deep coral (clear intensity ramp, colorblind-safe)
+const WFH_COLORS = {'Never':'#cfd4da','Rarely':'#92b4d4','Sometimes':'#2166ac','Often':'#e08214','Always':'#c0392b'}
+const WAVE_COLORS = {'2015':'#8c5fa8','2021':'#2166ac','2024':'#e08214'}
+// Qualitative palette: maximally distinct, colorblind-safe (Okabe-Ito inspired)
+const CAT = ['#2166ac','#e08214','#1b7837','#8c5fa8','#c0392b','#35978f','#d6a419','#c994c7']
 const GRID = '#eef0f3'
 const PLOTLY_LAYOUT = (extra={}) => ({
   paper_bgcolor:'#ffffff', plot_bgcolor:'#ffffff',
@@ -538,7 +570,7 @@ function showPage(id, btn) {
   btn.classList.add('active')
   // Lazy-init pages
   const inits = {
-    overview: initOverview, map: initMap, wellbeing: initWellbeing,
+    overview: initOverview, keyfindings: initKeyFindings, map: initMap, wellbeing: initWellbeing,
     productivity: initProductivity, perceptions: initPerceptions,
     agegender: initAgeGender,
     familypay: initFamilyPay, distributions: initDistributions,
@@ -605,7 +637,7 @@ async function initOverview() {
     textposition:'outside', textfont:{color:C.muted,size:9},
     marker:{
       color:sorted.map(d=>d.pct),
-      colorscale:[[0,'#cfe0d6'],[0.5,C.blue],[1,C.green]],
+      colorscale:[[0,'#dbe5ef'],[0.5,'#5a8fc0'],[1,C.blue]],
       showscale:false, line:{color:'rgba(0,0,0,0)',width:0}
     },
     hovertemplate:'<b>%{y}</b>: %{x:.1f}% usually WFH<extra></extra>'
@@ -964,7 +996,7 @@ async function updateScatter() {
   let filtered = secFil==='all' ? data : data.filter(d=>d.sector===secFil)
 
   const groups = groupBy==='sector' ? [...new Set(filtered.map(d=>d.sector))] : ['0-25%','25-50%','50-75%','75-100%']
-  const palette = [C.blue,C.orange,C.green,C.purple,C.pink,C.red,'#ffd166','#06d6a0','#118ab2','#ef476f','#26547c','#ffd166']
+  const palette = CAT.concat(CAT)
   const traces = groups.map((g,i) => {
     const pts = filtered.filter(d=> groupBy==='sector' ? d.sector===g : d.pct_band===g)
     return {
@@ -1027,7 +1059,7 @@ async function plotMentalHealth() {
   const d = await load('hi_mental')
   const conditions = [...new Set(d.map(r=>r.mental_health))]
   const arrs = [...new Set(d.map(r=>r.work_arrangement))]
-  const palette = [C.blue,C.orange,C.green,C.purple,C.pink,C.red]
+  const palette = CAT
   const traces = conditions.map((c,i) => ({
     type:'bar', name:c.length>20?c.slice(0,20)+'…':c, x:arrs,
     y:arrs.map(a=>{ const r=d.find(x=>x.work_arrangement===a&&x.mental_health===c); return r?r.pct:0 }),
@@ -1141,7 +1173,7 @@ async function updatePerceptions() {
     }))
   } else if (split==='sector') {
     let topSectors = [...new Set(sectorD.map(d=>d.sector))].slice(0,6)
-    const palette = [C.blue,C.orange,C.green,C.purple,C.pink,C.red]
+    const palette = CAT
     traces = topSectors.map((s,i) => ({
       type:'bar', orientation:'h', name:s.length>30?s.slice(0,30)+'…':s,
       y:items.map(it=>ITEM_LABELS[it]),
@@ -1151,7 +1183,7 @@ async function updatePerceptions() {
     }))
   } else if (split==='country') {
     const topCtries = [...new Set(countryD.map(d=>d.country))].slice(0,6)
-    const palette = [C.blue,C.orange,C.green,C.purple,C.pink,C.red]
+    const palette = CAT
     traces = topCtries.map((c,i) => ({
       type:'bar', orientation:'h', name:c,
       y:items.map(it=>ITEM_LABELS[it]),
@@ -1511,7 +1543,7 @@ async function plotFirmCountry() {
     text:sorted.map(r=>r.pct.toFixed(0)+'%'), textposition:'outside', textfont:{color:C.muted,size:9},
     marker:{
       color:sorted.map(r=>r.geo==='EU'?C.orange:r.pct),
-      colorscale:[[0,'#cfe0d6'],[0.5,C.teal],[1,C.green]], showscale:false
+      colorscale:[[0,'#d4e3d9'],[0.5,C.teal],[1,C.green]], showscale:false
     },
     hovertemplate:'<b>%{y}</b>: %{x:.1f}% of enterprises<extra></extra>'
   }], PLOTLY_LAYOUT({
@@ -1645,6 +1677,139 @@ async function plotAgWho5Age() {
   if (el && ins) el.innerHTML = `In the latest data, <b>${ins.gender_f}%</b> of women usually work from home versus <b>${ins.gender_m}%</b> of men — a reversal of the historical male-dominated pattern. By age, prime-age workers (25–49) reach <b>${ins.age_mid}%</b> while the under-25s sit at just <b>${ins.age_young}%</b>, reflecting junior roles and less negotiating power over where work happens.`
 }
 
+
+// KEY FINDINGS
+async function initKeyFindings() {
+  await Promise.all([
+    plotKfScatter(), plotKfSlope(), plotKfParadox(), plotKfWaffle(), plotKfBump()
+  ])
+}
+initKeyFindings.done = false
+
+// #6 Connected scatter: WFH% vs WHO-5 across waves (the journey)
+async function plotKfScatter() {
+  const d = await load('keyf_scatter_waves')
+  d.sort((a,b)=>a.wave-b.wave)
+  const traces = [
+    // path line
+    {x:d.map(r=>r.pct_high_wfh), y:d.map(r=>r.who5), mode:'lines',
+     line:{color:'#c4c8ce',width:2,dash:'dot'}, showlegend:false, hoverinfo:'skip'},
+    // points
+    {x:d.map(r=>r.pct_high_wfh), y:d.map(r=>r.who5), mode:'markers+text',
+     marker:{size:[18,24,18], color:d.map(r=>WAVE_COLORS[r.wave]), line:{color:'#fff',width:2}},
+     text:d.map(r=>r.wave), textposition:'top center', textfont:{size:12,color:C.txt,family:'Inter'},
+     showlegend:false,
+     hovertemplate:'<b>%{text}</b><br>High-WFH: %{x:.1f}%<br>WHO-5: %{y:.1f}<extra></extra>',
+     customdata:d.map(r=>r.wave)}
+  ]
+  Plotly.newPlot('plot-kf-scatter', traces, PLOTLY_LAYOUT({
+    xaxis:{...PLOTLY_LAYOUT().xaxis, title:'% often or always working from home', ticksuffix:'%'},
+    yaxis:{...PLOTLY_LAYOUT().yaxis, title:'Mean WHO-5 well-being', range:[60,72]},
+    margin:{l:55,r:20,t:30,b:50},
+    annotations:[
+      {x:d[0].pct_high_wfh,y:d[0].who5,ax:30,ay:25,text:'pre-COVID',font:{color:C.muted,size:9},showarrow:false},
+      {x:d[1].pct_high_wfh,y:d[1].who5,ax:0,ay:30,text:'forced isolation',font:{color:C.blue,size:9},showarrow:false,yshift:-22},
+      {x:d[2].pct_high_wfh,y:d[2].who5,text:'new normal',font:{color:C.orange,size:9},showarrow:false,yshift:18}
+    ]
+  }), PLOTLY_CONFIG)
+}
+
+// #1 Slope chart: WHO-5 by WFH level, 2015 vs 2024
+async function plotKfSlope() {
+  const d = await load('who5_waves')
+  const get = (w,wfh)=>{const r=d.find(x=>x.wave===w&&x.wfh===wfh);return r?r.who5:null}
+  const traces = WFH_ORDER.map(wfh => {
+    const y15=get('2015',wfh), y24=get('2024',wfh)
+    const rising = y24>=y15
+    return {x:['2015','2024'], y:[y15,y24], mode:'lines+markers+text',
+      name:wfh, line:{color:WFH_COLORS[wfh],width:2.5},
+      marker:{size:8,color:WFH_COLORS[wfh],line:{color:'#fff',width:1.5}},
+      text:['', wfh], textposition:'middle right', textfont:{size:9,color:WFH_COLORS[wfh]},
+      hovertemplate:`${wfh} %{x}: <b>%{y:.1f}</b><extra></extra>`, showlegend:false}
+  })
+  Plotly.newPlot('plot-kf-slope', traces, PLOTLY_LAYOUT({
+    xaxis:{...PLOTLY_LAYOUT().xaxis, title:'', range:[-0.15,1.4], tickvals:[0,1], ticktext:['2015','2024']},
+    yaxis:{...PLOTLY_LAYOUT().yaxis, title:'WHO-5 well-being', range:[60,72]},
+    margin:{l:55,r:60,t:30,b:40}
+  }), PLOTLY_CONFIG)
+}
+
+// #2 Diverging paradox: burnout (left, cost) vs commute saved (right, benefit)
+async function plotKfParadox() {
+  const d = await load('keyf_paradox')
+  d.sort((a,b)=>WFH_ORDER.indexOf(a.wfh)-WFH_ORDER.indexOf(b.wfh))
+  Plotly.newPlot('plot-kf-paradox', [
+    {y:d.map(r=>r.wfh), x:d.map(r=>-r.burnout_pct), type:'bar', orientation:'h',
+     name:'Burnout (%)', marker:{color:C.red},
+     text:d.map(r=>r.burnout_pct+'%'), textposition:'outside', textfont:{color:C.red,size:10},
+     hovertemplate:'%{y}: <b>%{text}</b> report burnout<extra></extra>'},
+    {y:d.map(r=>r.wfh), x:d.map(r=>r.commute_saved_h), type:'bar', orientation:'h',
+     name:'Commute saved (h/wk)', marker:{color:C.green},
+     text:d.map(r=>r.commute_saved_h+'h'), textposition:'outside', textfont:{color:C.green,size:10},
+     hovertemplate:'%{y}: <b>%{text}</b>/week saved<extra></extra>'}
+  ], PLOTLY_LAYOUT({
+    barmode:'relative',
+    xaxis:{...PLOTLY_LAYOUT().xaxis, title:'\u2190 burnout cost (%)      benefit: hours saved \u2192',
+           tickvals:[-40,-20,0,5], ticktext:['40%','20%','0','5h'], range:[-52,12]},
+    yaxis:{...PLOTLY_LAYOUT().yaxis, categoryorder:'array', categoryarray:WFH_ORDER},
+    showlegend:true, legend:{orientation:'h',y:-0.18,font:{size:9}},
+    shapes:[{type:'line',x0:0,x1:0,y0:-0.5,y1:4.5,line:{color:C.muted,width:1.5}}],
+    margin:{l:75,r:30,t:20,b:55}
+  }), PLOTLY_CONFIG)
+}
+
+// #5 Waffle chart: 100 squares, N filled = % WFH
+async function plotKfWaffle() {
+  const eu = await load('euro_eu')
+  const pct = Math.round(eu[eu.length-1].pct)
+  const rows=10, cols=10
+  const xs=[], ys=[], colors=[]
+  for(let i=0;i<rows*cols;i++){
+    const r=Math.floor(i/cols), col=i%cols
+    xs.push(col); ys.push(rows-1-r)
+    colors.push(i < pct ? C.green : '#e4e7ea')
+  }
+  Plotly.newPlot('plot-kf-waffle', [{
+    x:xs, y:ys, mode:'markers',
+    marker:{size:20, color:colors, symbol:'square', line:{color:'#fff',width:2}},
+    hoverinfo:'skip', showlegend:false
+  }], PLOTLY_LAYOUT({
+    xaxis:{visible:false, range:[-0.5,9.5]},
+    yaxis:{visible:false, range:[-0.5,9.5], scaleanchor:'x'},
+    margin:{l:10,r:10,t:30,b:10},
+    annotations:[{x:4.5,y:-0.5,yref:'y',text:`<b style="font-size:22px">${pct}</b> in 100 usually work from home (EU, ${eu[eu.length-1].year})`,
+      font:{color:C.txt,size:12},showarrow:false,yshift:-6}]
+  }), PLOTLY_CONFIG)
+}
+
+// #3 Bump chart: country ranking over years
+async function plotKfBump() {
+  const d = await load('keyf_bump')
+  const years = [...new Set(d.map(r=>r.year))].sort()
+  const countries = [...new Set(d.map(r=>r.country))]
+  // color top movers distinctly, rest grey
+  const finalRank = {}
+  d.filter(r=>r.year===years[years.length-1]).forEach(r=>finalRank[r.country]=r.rank)
+  const top5 = countries.filter(c=>finalRank[c]<=5)
+  const traces = countries.map((ctry,i) => {
+    const pts = years.map(y=>{const r=d.find(x=>x.country===ctry&&x.year===y);return r?r.rank:null})
+    const isTop = top5.includes(ctry)
+    return {
+      x:years, y:pts, mode:'lines+markers', name:ctry,
+      line:{color:isTop?CAT[top5.indexOf(ctry)%CAT.length]:'#d4d7dc', width:isTop?3:1.5, shape:'spline'},
+      marker:{size:isTop?8:5, color:isTop?CAT[top5.indexOf(ctry)%CAT.length]:'#d4d7dc', line:{color:'#fff',width:1}},
+      opacity:isTop?1:0.5, showlegend:isTop,
+      hovertemplate:`<b>${ctry}</b> %{x}: rank #%{y}<extra></extra>`
+    }
+  })
+  Plotly.newPlot('plot-kf-bump', traces, PLOTLY_LAYOUT({
+    xaxis:{...PLOTLY_LAYOUT().xaxis, title:'', tickvals:years},
+    yaxis:{...PLOTLY_LAYOUT().yaxis, title:'Rank (1 = highest WFH)', autorange:'reversed', dtick:1},
+    showlegend:true, legend:{font:{size:9}},
+    margin:{l:50,r:16,t:20,b:40}
+  }), PLOTLY_CONFIG)
+}
+
 async function initDeepDive() {
   const ts = await load('euro_country_ts')
   const countries = [...new Set(ts.map(d=>d.country))].sort()
@@ -1760,7 +1925,7 @@ async function updateLongSector() {
   const data = await load('who5_sector')
   const waveData = data.filter(d=>String(d.wave)===wave)
   const sectors = [...new Set(waveData.map(d=>d.sector))].sort()
-  const palette = [C.blue,C.orange,C.green,C.purple,C.pink,C.red,'#ffd166','#06d6a0','#118ab2','#ef476f']
+  const palette = CAT.concat(CAT)
   const traces = sectors.slice(0,8).map((s,i) => ({
     x:WFH_ORDER, y:WFH_ORDER.map(w=>{ const r=waveData.find(d=>d.sector===s&&d.wfh===w); return r?r.who5:null }),
     mode:'lines+markers', name:s.length>25?s.slice(0,25)+'…':s,
