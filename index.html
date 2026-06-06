@@ -417,37 +417,60 @@ async function initOverview() {
   const peak = eu.find(d=>d.year===2021)
   document.getElementById('kpi-peak').textContent = peak ? peak.pct.toFixed(1)+'%' : '~13%'
 
-  // EU trend line chart
+  // EU trend — area fill + country spaghetti
   const countries = [...new Set(trend.map(d=>d.geo))]
   const traces = countries.map(geo => {
     const pts = trend.filter(d=>d.geo===geo).sort((a,b)=>a.year-b.year)
-    return {x:pts.map(d=>d.year), y:pts.map(d=>d.pct), mode:'lines', line:{color:C.border,width:0.6}, hoverinfo:'skip', showlegend:false}
+    return {x:pts.map(d=>d.year), y:pts.map(d=>d.pct), mode:'lines',
+      line:{color:'rgba(74,158,255,0.12)',width:1},
+      hovertemplate:`${pts[0]?.country||geo} %{x}: <b>%{y:.1f}%</b><extra></extra>`,
+      showlegend:false}
+  })
+  traces.push({
+    x:eu.map(d=>d.year), y:eu.map(d=>d.pct), mode:'lines', fill:'tozeroy',
+    fillcolor:'rgba(74,158,255,0.07)', line:{color:'rgba(0,0,0,0)',width:0},
+    hoverinfo:'skip', showlegend:false
   })
   traces.push({
     x:eu.map(d=>d.year), y:eu.map(d=>d.pct), mode:'lines+markers',
-    line:{color:C.blue,width:2.5}, marker:{size:5,color:C.blue},
+    line:{color:C.blue,width:3,shape:'spline'},
+    marker:{size:6,color:C.blue,line:{color:'#0f1117',width:1.5}},
     name:'EU average',
-    hovertemplate:'EU avg %{x}: <b>%{y:.1f}%</b><extra></extra>'
+    hovertemplate:'EU avg <b>%{x}</b>: <b>%{y:.1f}%</b><extra></extra>'
   })
   Plotly.newPlot('plot-eu-trend', traces, {
     ...PLOTLY_LAYOUT({
-      shapes:[{type:'rect',x0:2019.8,x1:2021.2,y0:0,y1:1,xref:'x',yref:'paper',fillcolor:C.orange,opacity:.08,line:{width:0}},
-              {type:'line',x0:2020,x1:2020,y0:0,y1:1,xref:'x',yref:'paper',line:{color:C.orange,width:1,dash:'dot'}}],
-      annotations:[{x:2020.4,y:.85,xref:'x',yref:'paper',text:'COVID',font:{color:C.orange,size:9},showarrow:false,textangle:-90}],
-      yaxis:{...PLOTLY_LAYOUT().yaxis, ticksuffix:'%'},
-      showlegend:true, legend:{x:.02,y:.98}
+      shapes:[
+        {type:'rect',x0:2019.8,x1:2022.2,y0:0,y1:1,xref:'x',yref:'paper',fillcolor:C.orange,opacity:.06,line:{width:0}},
+        {type:'line',x0:2020,x1:2020,y0:0,y1:1,xref:'x',yref:'paper',line:{color:C.orange,width:1,dash:'dot'}}
+      ],
+      annotations:[{x:2021,y:.92,xref:'x',yref:'paper',text:'COVID-19',font:{color:C.orange,size:9},showarrow:false}],
+      yaxis:{...PLOTLY_LAYOUT().yaxis, ticksuffix:'%', gridcolor:'rgba(37,43,56,0.6)'},
+      xaxis:{...PLOTLY_LAYOUT().xaxis, gridcolor:'rgba(37,43,56,0.4)'},
+      showlegend:true, legend:{x:.02,y:.98,bgcolor:'rgba(0,0,0,0)'}
     })
   }, PLOTLY_CONFIG)
 
-  // Country ranking bar
+  // Country ranking bar — gradient by value
   const totals = freq.filter(d=>d.freq==='USU' && d.geo)
-  const sorted = totals.sort((a,b)=>b.pct-a.pct).slice(0,20)
+  const sorted = totals.sort((a,b)=>b.pct-a.pct).slice(0,22)
+  const maxPct = Math.max(...sorted.map(d=>d.pct))
   Plotly.newPlot('plot-country-rank', [{
     type:'bar', orientation:'h',
     x:sorted.map(d=>d.pct), y:sorted.map(d=>d.country),
-    marker:{color:sorted.map(d=>d.pct), colorscale:[[0,C.blue],[1,C.orange]], showscale:false},
-    hovertemplate:'%{y}: <b>%{x:.1f}%</b><extra></extra>'
-  }], PLOTLY_LAYOUT({xaxis:{...PLOTLY_LAYOUT().xaxis,ticksuffix:'%'}, margin:{l:100,r:16,t:16,b:40}}), PLOTLY_CONFIG)
+    text:sorted.map(d=>d.pct.toFixed(1)+'%'),
+    textposition:'outside', textfont:{color:C.muted,size:9},
+    marker:{
+      color:sorted.map(d=>d.pct),
+      colorscale:[[0,'#1e3a5f'],[0.5,C.blue],[1,C.orange]],
+      showscale:false, line:{color:'rgba(0,0,0,0)',width:0}
+    },
+    hovertemplate:'<b>%{y}</b>: %{x:.1f}% usually WFH<extra></extra>'
+  }], PLOTLY_LAYOUT({
+    xaxis:{...PLOTLY_LAYOUT().xaxis,ticksuffix:'%',range:[0,maxPct*1.15]},
+    margin:{l:110,r:50,t:10,b:40},
+    bargap:0.25
+  }), PLOTLY_CONFIG)
 
   // Gender gap
   const gdata = gender.filter(d=>d.sex!=='T')
@@ -477,52 +500,13 @@ async function initOverview() {
 initOverview.done = false
 
 // ═══════════════════════════════════════════════════════════
-// PAGE 2: MAP
+// PAGE 2: MAP — CHOROPLETH
 // ═══════════════════════════════════════════════════════════
-let leafMap, circleLayer = null
-async function initMap() {
-  leafMap = L.map('map_europe', {zoomControl:true}).setView([54,15],4)
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-    attribution:'&copy; <a href="https://carto.com">CARTO</a>',
-    subdomains:'abcd', maxZoom:10
-  }).addTo(leafMap)
-  updateMap()
-}
-initMap.done = false
+let leafMap, geojsonLayer = null
 
-async function updateMap() {
-  if (!leafMap) return
-  const [euroTs, centroids] = await Promise.all([load('euro_country_ts'), load('centroids')])
-  const yr   = +document.getElementById('map-year').value
-  const freq = document.getElementById('map-freq').value
-  const sex  = document.getElementById('map-sex').value
-
-  const pts = euroTs.filter(d=>d.year===yr && d.freq===freq && d.sex===sex)
-  const vals = pts.map(d=>d.pct).filter(v=>v!=null)
-  const maxV = Math.max(...vals, 1)
-
-  if (circleLayer) leafMap.removeLayer(circleLayer)
-  circleLayer = L.layerGroup()
-
-  centroids.forEach(cent => {
-    const row = pts.find(d=>d.geo===cent.geo)
-    if (!row) return
-    const pct = row.pct
-    const r = 6 + (pct/maxV)*20
-    const t = pct/maxV
-    const color = lerpColor('#1a2744', C.orange, t)
-    const circle = L.circleMarker([cent.lat, cent.lng], {
-      radius:r, fillColor:color, fillOpacity:.82,
-      color:'#fff', weight:.8, opacity:.5
-    })
-    circle.bindPopup(`<b style="color:${C.blue}">${cent.name}</b><br>
-      <span style="color:${C.txt};font-size:13px"><b>${pct.toFixed(1)}%</b> WFH</span><br>
-      <span style="color:${C.muted};font-size:11px">Year: ${yr} | Freq: ${freq}</span><br>
-      <button onclick="selectCountryAndGo('${cent.name}')" style="margin-top:6px;background:${C.blue};border:none;color:#fff;padding:4px 10px;border-radius:4px;cursor:pointer;font-size:11px">→ Deep Dive</button>`)
-    circleLayer.addLayer(circle)
-  })
-  circleLayer.addTo(leafMap)
-}
+// ISO2 mapping: Eurostat codes → GeoJSON ISO2
+const GEO_MAP = { EL:'GR', UK:'GB' }
+const NAME_TO_GEO = {} // populated after geojson load
 
 function lerpColor(a,b,t) {
   const ah=a.replace('#',''), bh=b.replace('#','')
@@ -532,9 +516,147 @@ function lerpColor(a,b,t) {
   return `#${r.toString(16).padStart(2,'0')}${g.toString(16).padStart(2,'0')}${bl.toString(16).padStart(2,'0')}`
 }
 
+// Color scale: dark navy → teal → amber
+function choroplethColor(pct, minV, maxV) {
+  if (pct == null) return '#1a1f2e'
+  const t = Math.max(0, Math.min(1, (pct - minV) / (maxV - minV || 1)))
+  if (t < 0.5) return lerpColor('#1e3a5f', '#4a9eff', t * 2)
+  return lerpColor('#4a9eff', '#f7a25c', (t - 0.5) * 2)
+}
+
+async function initMap() {
+  leafMap = L.map('map_europe', {
+    zoomControl: true,
+    scrollWheelZoom: true,
+    minZoom: 3, maxZoom: 8
+  }).setView([54, 14], 4)
+
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png', {
+    attribution: '&copy; <a href="https://carto.com">CARTO</a>',
+    subdomains: 'abcd', maxZoom: 10
+  }).addTo(leafMap)
+
+  // Label layer on top
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png', {
+    subdomains: 'abcd', maxZoom: 10, pane: 'shadowPane'
+  }).addTo(leafMap)
+
+  await updateMap()
+}
+initMap.done = false
+
+async function updateMap() {
+  if (!leafMap) return
+  const [euroTs, geojson] = await Promise.all([load('euro_country_ts'), load('europe')])
+
+  const yr   = +document.getElementById('map-year').value
+  const freq = document.getElementById('map-freq').value
+  const sex  = document.getElementById('map-sex').value
+
+  const pts = euroTs.filter(d => d.year===yr && d.freq===freq && d.sex===sex)
+  const vals = pts.map(d=>d.pct).filter(v=>v!=null&&v>0)
+  const minV = Math.min(...vals)
+  const maxV = Math.max(...vals, 1)
+
+  // Build lookup: ISO2 → value (handle Eurostat EL→GR, UK→GB)
+  const valMap = {}
+  pts.forEach(d => {
+    const iso = GEO_MAP[d.geo] || d.geo
+    valMap[iso] = d.pct
+  })
+
+  if (geojsonLayer) leafMap.removeLayer(geojsonLayer)
+
+  // Tooltip div
+  const tooltip = document.getElementById('map-tooltip') || (() => {
+    const d = document.createElement('div')
+    d.id = 'map-tooltip'
+    d.style.cssText = `position:fixed;background:#181c24;border:1px solid #252b38;border-radius:8px;padding:10px 14px;pointer-events:none;display:none;z-index:9999;font-family:'IBM Plex Sans',sans-serif;min-width:160px;`
+    document.body.appendChild(d)
+    return d
+  })()
+
+  geojsonLayer = L.geoJSON(geojson, {
+    style: feature => {
+      const iso = feature.properties.ISO2
+      const pct = valMap[iso]
+      return {
+        fillColor: choroplethColor(pct, minV, maxV),
+        fillOpacity: pct != null ? 0.85 : 0.15,
+        color: '#0f1117',
+        weight: 0.8,
+        opacity: 1
+      }
+    },
+    onEachFeature: (feature, layer) => {
+      const iso  = feature.properties.ISO2
+      const name = feature.properties.NAME
+      const pct  = valMap[iso]
+      NAME_TO_GEO[name] = iso
+
+      layer.on({
+        mousemove: e => {
+          tooltip.style.display = 'block'
+          tooltip.style.left = (e.originalEvent.clientX + 16) + 'px'
+          tooltip.style.top  = (e.originalEvent.clientY - 10) + 'px'
+          tooltip.innerHTML = `
+            <div style="font-weight:700;color:#4a9eff;font-size:.9rem;margin-bottom:4px">${name}</div>
+            <div style="color:#e8e9ed;font-size:1.1rem;font-weight:700">${pct != null ? pct.toFixed(1)+'%' : 'No data'}</div>
+            <div style="color:#7a8394;font-size:.75rem;margin-top:2px">usually working from home · ${yr}</div>
+            ${pct != null ? `<div style="margin-top:6px;height:4px;border-radius:2px;background:linear-gradient(to right,#1e3a5f,#4a9eff,#f7a25c)"><div style="height:100%;width:${Math.round((pct-minV)/(maxV-minV)*100)}%;background:#fff;border-radius:2px;opacity:.4"></div></div>` : ''}
+          `
+        },
+        mouseout: () => { tooltip.style.display = 'none' },
+        click: () => {
+          // Find country name in deep dive selector
+          const euroName = pts.find(d=>(GEO_MAP[d.geo]||d.geo)===iso)
+          if (euroName) selectCountryAndGo(euroName.country)
+        },
+        mouseover: e => {
+          e.target.setStyle({ weight: 2, color: '#ffffff', fillOpacity: 0.95 })
+          e.target.bringToFront()
+        },
+        mouseout: e => {
+          geojsonLayer.resetStyle(e.target)
+          tooltip.style.display = 'none'
+        }
+      })
+    }
+  }).addTo(leafMap)
+
+  // Update legend
+  updateMapLegend(minV, maxV)
+}
+
+let mapLegend = null
+function updateMapLegend(minV, maxV) {
+  if (mapLegend) leafMap.removeControl(mapLegend)
+  mapLegend = L.control({position:'bottomright'})
+  mapLegend.onAdd = () => {
+    const div = L.DomUtil.create('div','info legend')
+    div.style.cssText = 'background:#181c24;border:1px solid #252b38;border-radius:8px;padding:12px 16px;color:#e8e9ed;font-family:IBM Plex Sans,sans-serif;min-width:160px'
+    const steps = [0, 25, 50, 75, 100]
+    const vals  = steps.map(s => minV + (maxV-minV)*s/100)
+    div.innerHTML = `
+      <div style="font-size:.68rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#7a8394;margin-bottom:8px">% usually WFH</div>
+      <div style="height:10px;border-radius:5px;background:linear-gradient(to right,#1e3a5f,#4a9eff,#f7a25c);margin-bottom:6px"></div>
+      <div style="display:flex;justify-content:space-between;font-size:.7rem;color:#7a8394;font-family:'IBM Plex Mono',monospace">
+        <span>${minV.toFixed(0)}%</span><span>${((minV+maxV)/2).toFixed(0)}%</span><span>${maxV.toFixed(0)}%</span>
+      </div>
+      <div style="margin-top:8px;font-size:.7rem;color:#3d4555">▪ No data</div>
+    `
+    return div
+  }
+  mapLegend.addTo(leafMap)
+}
+
 function selectCountryAndGo(country) {
   const sel = document.getElementById('dd-country')
-  if (sel) sel.value = country
+  if (sel) {
+    // Try exact match first, then partial
+    const opt = [...sel.options].find(o => o.value === country || o.value.toLowerCase().includes(country.toLowerCase()))
+    if (opt) sel.value = opt.value
+  }
   const deepDiveBtn = document.querySelectorAll('.nav-btn')[5]
   showPage('deepdive', deepDiveBtn)
   updateDeepDive()
@@ -571,19 +693,34 @@ async function updateWellbeing() {
     data = WFH_ORDER.map(w=>{ const r=data.find(d=>d.wfh===w); return r?{wfh:w,who5:r.who5,se:r.se,n:r.n}:{wfh:w,who5:null,se:0,n:0} }).filter(d=>d.who5)
   }
 
-  Plotly.react('plot-who5-bar', [{
-    type:'bar',
-    x:data.map(d=>d.wfh), y:data.map(d=>d.who5),
-    error_y:{type:'data', array:data.map(d=>d.se*1.96), visible:true, color:C.txt, thickness:1.5, width:4},
-    marker:{color:data.map(d=>WFH_COLORS[d.wfh]||C.blue)},
-    text:data.map(d=>`${d.who5.toFixed(1)}`), textposition:'outside', textfont:{color:C.muted,size:9},
-    hovertemplate:'%{x}: <b>%{y:.1f}</b> WHO-5 (n=%{customdata})<extra></extra>',
-    customdata:data.map(d=>d.n)
-  }], PLOTLY_LAYOUT({
-    yaxis:{...PLOTLY_LAYOUT().yaxis, range:[0,105], title:'WHO-5 Index (0–100)'},
-    shapes:[{type:'line',x0:-0.5,x1:data.length-0.5,y0:50,y1:50,line:{color:C.red,width:1.5,dash:'dash'}}],
-    annotations:[{x:0,y:52,text:'Depression threshold (50)',font:{color:C.red,size:9},showarrow:false,xanchor:'left'}],
-    margin:{l:50,r:16,t:30,b:60}
+  // WHO-5 — coloured bars with value labels + threshold band
+  Plotly.react('plot-who5-bar', [
+    // Background danger band
+    {type:'bar', x:data.map(d=>d.wfh), y:data.map(d=>50),
+     marker:{color:'rgba(224,82,82,0.07)'}, showlegend:false, hoverinfo:'skip'},
+    // Main bars
+    {type:'bar', x:data.map(d=>d.wfh), y:data.map(d=>d.who5),
+     error_y:{type:'data', array:data.map(d=>d.se*1.96), visible:true, color:'rgba(255,255,255,0.4)', thickness:2, width:5},
+     marker:{
+       color:data.map(d=>WFH_COLORS[d.wfh]||C.blue),
+       opacity:0.9,
+       line:{color:'rgba(255,255,255,0.1)',width:1}
+     },
+     text:data.map(d=>`<b>${d.who5.toFixed(1)}</b>`),
+     textposition:'outside', textfont:{color:C.txt,size:11},
+     hovertemplate:'<b>%{x}</b><br>WHO-5: <b>%{y:.1f}</b>/100<br>n=%{customdata}<extra></extra>',
+     customdata:data.map(d=>d.n)}
+  ], PLOTLY_LAYOUT({
+    barmode:'overlay',
+    yaxis:{...PLOTLY_LAYOUT().yaxis, range:[0,108], title:'WHO-5 Index (0–100)',
+           tickvals:[0,25,50,75,100]},
+    shapes:[
+      {type:'line',x0:-0.5,x1:data.length-0.5,y0:50,y1:50,line:{color:C.red,width:1.5,dash:'dash'}},
+      {type:'rect',x0:-0.5,x1:data.length-0.5,y0:0,y1:50,fillcolor:'rgba(224,82,82,0.04)',line:{width:0}}
+    ],
+    annotations:[{x:data.length-0.5,y:51,text:'⚠ depression risk threshold',
+      font:{color:C.red,size:8.5},showarrow:false,xanchor:'right'}],
+    margin:{l:55,r:16,t:20,b:60}, showlegend:false
   }), PLOTLY_CONFIG)
 }
 
@@ -592,13 +729,18 @@ async function plotWho5Waves() {
   const traces = ['2015','2021','2024'].map(w => {
     const pts = WFH_ORDER.map(wfh => { const r=data.find(d=>d.wave===+w&&d.wfh===wfh); return r?r.who5:null })
     return {x:WFH_ORDER, y:pts, mode:'lines+markers', name:`Wave ${w}`,
-      line:{color:WAVE_COLORS[w],width:2},marker:{size:7,color:WAVE_COLORS[w]},
-      hovertemplate:`Wave ${w} %{x}: <b>%{y:.1f}</b><extra></extra>`}
+      line:{color:WAVE_COLORS[w],width:2.5,shape:'spline'},
+      marker:{size:9,color:WAVE_COLORS[w],line:{color:'#0f1117',width:2}},
+      hovertemplate:`Wave ${w} | <b>%{x}</b>: <b>%{y:.1f}</b>/100<extra></extra>`}
   })
   traces.push({x:WFH_ORDER, y:[50,50,50,50,50], mode:'lines', line:{color:C.red,dash:'dash',width:1.5}, showlegend:false, hoverinfo:'skip'})
   Plotly.newPlot('plot-who5-waves', traces, PLOTLY_LAYOUT({
-    yaxis:{...PLOTLY_LAYOUT().yaxis,range:[0,100],title:'WHO-5 Index (0–100)'},
-    showlegend:true
+    yaxis:{...PLOTLY_LAYOUT().yaxis, range:[30,100], title:'WHO-5 Index (0–100)',
+           gridcolor:'rgba(37,43,56,0.6)'},
+    xaxis:{...PLOTLY_LAYOUT().xaxis, gridcolor:'rgba(0,0,0,0)'},
+    showlegend:true,
+    shapes:[{type:'rect',x0:-0.5,x1:4.5,y0:30,y1:50,fillcolor:'rgba(224,82,82,0.05)',line:{width:0}}],
+    annotations:[{x:4.3,y:49,text:'risk zone',font:{color:C.red,size:8},showarrow:false}]
   }), PLOTLY_CONFIG)
 }
 
@@ -663,11 +805,24 @@ async function updateScatter() {
     }
   })
   Plotly.react('plot-scatter', traces, PLOTLY_LAYOUT({
-    xaxis:{...PLOTLY_LAYOUT().xaxis,title:'Productivity score (1–7)',range:[1,7.5]},
-    yaxis:{...PLOTLY_LAYOUT().yaxis,title:'WLB score (1–7)',range:[1,7.5]},
-    showlegend:true, legend:{orientation:'v', font:{size:8}},
-    margin:{l:60,r:16,t:16,b:60},
-    annotations:[{x:3.5,y:7.2,text:'Bubble size ∝ N respondents',font:{color:C.muted,size:8},showarrow:false}]
+    xaxis:{...PLOTLY_LAYOUT().xaxis, title:'Productivity score (1–7)', range:[1,7.5],
+           gridcolor:'rgba(37,43,56,0.5)',
+           showline:true, linecolor:C.border},
+    yaxis:{...PLOTLY_LAYOUT().yaxis, title:'WLB score (1–7)', range:[1,7.5],
+           gridcolor:'rgba(37,43,56,0.5)',
+           showline:true, linecolor:C.border},
+    showlegend:true, legend:{orientation:'v', font:{size:8}, bgcolor:'rgba(0,0,0,0)'},
+    margin:{l:60,r:16,t:20,b:60},
+    shapes:[
+      {type:'line',x0:4,x1:4,y0:1,y1:7.5,line:{color:C.muted,width:1,dash:'dot'}},
+      {type:'line',x0:1,x1:7.5,y0:4,y1:4,line:{color:C.muted,width:1,dash:'dot'}}
+    ],
+    annotations:[
+      {x:7.4,y:1.3,text:'Low prod / Low WLB',font:{color:C.muted,size:7.5},showarrow:false,xanchor:'right'},
+      {x:7.4,y:7.2,text:'High prod / High WLB',font:{color:C.green,size:7.5},showarrow:false,xanchor:'right'},
+      {x:1.1,y:7.2,text:'Low prod / High WLB',font:{color:C.muted,size:7.5},showarrow:false,xanchor:'left'},
+      {x:3.5,y:.98,text:'Bubble size ∝ N respondents',font:{color:C.muted,size:7.5},showarrow:false,xanchor:'center',yref:'paper',y:-.08}
+    ]
   }), PLOTLY_CONFIG)
 }
 
@@ -943,8 +1098,9 @@ async function plotLongWho5() {
   const traces = ['2015','2021','2024'].map(w => {
     const pts = WFH_ORDER.map(wfh=>{ const r=data.find(d=>d.wave===+w&&d.wfh===wfh); return r?r.who5:null })
     return {x:WFH_ORDER, y:pts, mode:'lines+markers', name:`Wave ${w}`,
-      line:{color:WAVE_COLORS[w],width:2.5}, marker:{size:8,color:WAVE_COLORS[w]},
-      hovertemplate:`Wave ${w} | %{x}: <b>%{y:.1f}</b><extra></extra>`}
+      line:{color:WAVE_COLORS[w],width:3,shape:'spline'},
+      marker:{size:10,color:WAVE_COLORS[w],line:{color:'#0f1117',width:2}},
+      hovertemplate:`Wave ${w} | <b>%{x}</b>: <b>%{y:.1f}</b>/100<extra></extra>`}
   })
   traces.push({x:WFH_ORDER, y:[50,50,50,50,50], mode:'lines', line:{color:C.red,dash:'dash',width:1.5}, showlegend:false, hoverinfo:'skip'})
   Plotly.newPlot('plot-long-who5', traces, PLOTLY_LAYOUT({
