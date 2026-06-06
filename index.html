@@ -104,6 +104,7 @@ input[type=range]{padding:4px 0;accent-color:var(--blue)}
   <button class="nav-btn" onclick="showPage('productivity',this)">Productivity</button>
   <button class="nav-btn" onclick="showPage('perceptions',this)">Perceptions</button>
   <button class="nav-btn" onclick="showPage('familypay',this)">Family &amp; Pay</button>
+  <button class="nav-btn" onclick="showPage('distributions',this)">Distributions</button>
   <button class="nav-btn" onclick="showPage('deepdive',this)">Country Deep-Dive</button>
   <button class="nav-btn" onclick="showPage('longitudinal',this)">2015→2024</button>
   <button class="nav-btn" onclick="showPage('about',this)">About</button>
@@ -305,7 +306,39 @@ input[type=range]{padding:4px 0;accent-color:var(--blue)}
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════════════════
+<!-- ══════════════════════════════════
+     PAGE 5c: DISTRIBUTIONS
+══════════════════════════════════ -->
+<div id="page-distributions" class="page">
+  <div class="section-head">Distributions — The Shape Behind the Averages</div>
+  <div style="color:#7a8394;font-size:.85rem;margin-bottom:16px;max-width:820px;line-height:1.6">
+    Averages hide the story. These plots show the <b style="color:#e8e9ed">full distribution</b> of outcomes — where the bulge is wide, many people share that value; long tails reveal minorities who fare very differently. Source: Eurofound EWCS/EWCTS.
+  </div>
+  <div class="row">
+    <div class="col-12"><div class="card">
+      <div class="card-title">Well-being (WHO-5) distribution by remote-work frequency — EWCTS 2021</div>
+      <div class="plot-wrap tall" id="plot-violin-who5"></div>
+    </div></div>
+  </div>
+  <div class="row">
+    <div class="col-6"><div class="card">
+      <div class="card-title">Weekly working hours by remote-work frequency — the "always-on" tail</div>
+      <div class="plot-wrap" id="plot-violin-hours"></div>
+    </div></div>
+    <div class="col-6"><div class="card">
+      <div class="card-title">Well-being by family situation — who carries the load?</div>
+      <div class="plot-wrap" id="plot-violin-family"></div>
+    </div></div>
+  </div>
+  <div class="row">
+    <div class="col-12"><div class="card">
+      <div class="card-title">The well-being wave: how the WHO-5 distribution shifted 2015 → 2021 → 2024</div>
+      <div class="plot-wrap tall" id="plot-ridgeline"></div>
+    </div></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
      PAGE 6: COUNTRY DEEP DIVE
 ══════════════════════════════════════════════════════ -->
 <div id="page-deepdive" class="page">
@@ -436,7 +469,7 @@ function showPage(id, btn) {
   const inits = {
     overview: initOverview, map: initMap, wellbeing: initWellbeing,
     productivity: initProductivity, perceptions: initPerceptions,
-    familypay: initFamilyPay,
+    familypay: initFamilyPay, distributions: initDistributions,
     deepdive: initDeepDive, longitudinal: initLongitudinal
   }
   if (inits[id] && !inits[id].done) { inits[id](); inits[id].done=true }
@@ -1209,6 +1242,110 @@ async function plotSalarySector() {
 // ═══════════════════════════════════════════════════════════
 // PAGE 6: COUNTRY DEEP DIVE
 // ═══════════════════════════════════════════════════════════
+
+function hexToRgba(hex, a) {
+  const h = hex.replace('#','')
+  return `rgba(${parseInt(h.slice(0,2),16)},${parseInt(h.slice(2,4),16)},${parseInt(h.slice(4,6),16)},${a})`
+}
+
+async function initDistributions() {
+  await Promise.all([plotViolinWho5(), plotViolinHours(), plotViolinFamily(), plotRidgeline()])
+}
+initDistributions.done = false
+
+function violinTrace(yvals, name, color) {
+  return {
+    type:'violin', y:yvals||[], name:name,
+    box:{visible:true, width:0.12, fillcolor:'#0f1117', line:{color:'rgba(255,255,255,0.4)'}},
+    meanline:{visible:true, color:'#ffffff'},
+    points:false, spanmode:'hard',
+    fillcolor:hexToRgba(color,0.72), opacity:1,
+    line:{color:color, width:1.5},
+    hovertemplate:`<b>${name}</b><br>%{y}<extra></extra>`
+  }
+}
+
+async function plotViolinWho5() {
+  const d = await load('violin_who5')
+  const traces = WFH_ORDER.map(lvl => violinTrace(d[lvl], lvl, WFH_COLORS[lvl]))
+  Plotly.newPlot('plot-violin-who5', traces, PLOTLY_LAYOUT({
+    yaxis:{...PLOTLY_LAYOUT().yaxis, range:[0,100], title:'WHO-5 Index (0–100)', tickvals:[0,25,50,75,100]},
+    xaxis:{...PLOTLY_LAYOUT().xaxis, title:'Remote-work frequency'},
+    showlegend:false,
+    shapes:[{type:'line',x0:-0.5,x1:4.5,y0:50,y1:50,line:{color:C.red,width:1.5,dash:'dash'}}],
+    annotations:[{x:4.5,y:46,text:'⚠ depression risk threshold',font:{color:C.red,size:9},showarrow:false,xanchor:'right'}],
+    margin:{l:55,r:16,t:24,b:50}
+  }), PLOTLY_CONFIG)
+}
+
+async function plotViolinHours() {
+  const d = await load('violin_hours')
+  const traces = WFH_ORDER.map(lvl => violinTrace(d[lvl], lvl, WFH_COLORS[lvl]))
+  Plotly.newPlot('plot-violin-hours', traces, PLOTLY_LAYOUT({
+    yaxis:{...PLOTLY_LAYOUT().yaxis, title:'Usual weekly hours', range:[0,80]},
+    xaxis:{...PLOTLY_LAYOUT().xaxis, title:'Remote-work frequency'},
+    showlegend:false,
+    shapes:[{type:'line',x0:-0.5,x1:4.5,y0:40,y1:40,line:{color:C.muted,width:1,dash:'dot'}}],
+    annotations:[{x:-0.5,y:43,text:'40h full-time',font:{color:C.muted,size:8},showarrow:false,xanchor:'left'}],
+    margin:{l:55,r:16,t:24,b:50}
+  }), PLOTLY_CONFIG)
+}
+
+async function plotViolinFamily() {
+  const d = await load('violin_family')
+  const order = ['Living alone','Couple, no kids','Multi-adult','With children']
+  const colors = {'Living alone':C.purple,'Couple, no kids':C.blue,'Multi-adult':C.green,'With children':C.orange}
+  const traces = order.map(ft => violinTrace(d[ft], ft, colors[ft]))
+  Plotly.newPlot('plot-violin-family', traces, PLOTLY_LAYOUT({
+    yaxis:{...PLOTLY_LAYOUT().yaxis, range:[0,100], title:'WHO-5 Index'},
+    xaxis:{...PLOTLY_LAYOUT().xaxis, tickangle:-15},
+    showlegend:false,
+    shapes:[{type:'line',x0:-0.5,x1:3.5,y0:50,y1:50,line:{color:C.red,width:1.5,dash:'dash'}}],
+    margin:{l:55,r:16,t:24,b:60}
+  }), PLOTLY_CONFIG)
+}
+
+function kde(data, bw, grid) {
+  return grid.map(x => {
+    const s = data.reduce((acc,xi) => acc + Math.exp(-0.5*((x-xi)/bw)**2), 0)
+    return s/(data.length*bw*Math.sqrt(2*Math.PI))
+  })
+}
+
+async function plotRidgeline() {
+  const d = await load('ridgeline_who5')
+  const waves = ['2015','2021','2024']
+  const grid = []
+  for(let x=0;x<=100;x+=2) grid.push(x)
+  const bw = 7, ridgeGap = 28
+  const traces = []
+  waves.forEach((w,i) => {
+    const dens = kde(d[w], bw, grid)
+    const maxD = Math.max(...dens)
+    const baseline = (waves.length-1-i) * ridgeGap
+    const scaled = dens.map(v => v/maxD * (ridgeGap*1.5) + baseline)
+    traces.push({
+      x:grid, y:grid.map(()=>baseline), mode:'lines',
+      line:{color:'rgba(0,0,0,0)',width:0}, showlegend:false, hoverinfo:'skip'
+    })
+    traces.push({
+      x:grid, y:scaled, mode:'lines', fill:'tonexty',
+      fillcolor:hexToRgba(WAVE_COLORS[w],0.5),
+      line:{color:WAVE_COLORS[w], width:2.5, shape:'spline'},
+      name:`Wave ${w}`,
+      hovertemplate:`Wave ${w}<br>WHO-5 ≈ %{x}<extra></extra>`
+    })
+  })
+  Plotly.newPlot('plot-ridgeline', traces, PLOTLY_LAYOUT({
+    xaxis:{...PLOTLY_LAYOUT().xaxis, title:'WHO-5 Index (0–100)', range:[0,100], tickvals:[0,25,50,75,100]},
+    yaxis:{...PLOTLY_LAYOUT().yaxis, showticklabels:false, title:'', zeroline:false, showgrid:false},
+    showlegend:true, legend:{x:.02,y:.98,bgcolor:'rgba(0,0,0,0)'},
+    shapes:[{type:'line',x0:50,x1:50,y0:0,y1:1,yref:'paper',line:{color:C.red,width:1.5,dash:'dash'}}],
+    annotations:[{x:50,y:1,yref:'paper',text:'depression threshold',font:{color:C.red,size:9},showarrow:false,yanchor:'bottom'}],
+    margin:{l:30,r:16,t:30,b:50}
+  }), PLOTLY_CONFIG)
+}
+
 async function initDeepDive() {
   const ts = await load('euro_country_ts')
   const countries = [...new Set(ts.map(d=>d.country))].sort()
