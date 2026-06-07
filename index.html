@@ -16,79 +16,77 @@
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
 
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Source+Sans+3:wght@400;500;600;700&display=swap');
 
 :root{
-  --bg:#ffffff; --bg2:#ffffff; --bg3:#f7f8fa; --panel:#ffffff;
-  --border:#e8eaed; --border2:#d8dbe0;
-  --ink:#1a1d23; --ink2:#4a4f57; --muted:#9aa0a8; --faint:#c4c8ce;
-  --accent:#2f6f4f;       /* sage green */
-  --accent-soft:#e8f0eb;
-  --blue:#3b6ea5; --orange:#d98a3d; --purple:#7a6ba8; --pink:#c47d9e;
-  --green:#2f6f4f; --red:#c0584f; --teal:#3d8b8b;
+  --bg:#f5f0e6; --bg2:#fdfbf6; --bg3:#efe9dc; --panel:#fdfbf6;
+  --border:#ddd4c2; --border2:#cbbfa8;
+  --ink:#1c1a17; --ink2:#4a443b; --muted:#8a8170; --faint:#b8ad97;
+  --accent:#9e2b25;       /* FT brick red */
+  --accent-soft:#f3e5e2;
+  --blue:#2b5c7e; --orange:#c47a28; --purple:#6b5b95; --green:#5a7340;
+  --red:#9e2b25; --teal:#3d7068; --ochre:#b8902a;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
-body{background:var(--bg);color:var(--ink);font-family:'Inter',sans-serif;font-size:14px;line-height:1.55;-webkit-font-smoothing:antialiased}
+body{background:var(--bg);color:var(--ink);font-family:'Source Sans 3',sans-serif;font-size:14px;line-height:1.55;-webkit-font-smoothing:antialiased}
 
 /* NAV */
-nav{background:rgba(255,255,255,0.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 32px;display:flex;align-items:center;position:sticky;top:0;z-index:1000;flex-wrap:wrap}
-.brand{font-weight:700;font-size:.82rem;letter-spacing:.14em;color:var(--ink);padding:20px 24px 20px 0;margin-right:8px;white-space:nowrap;text-transform:uppercase}
-.nav-btn{background:none;border:none;color:var(--muted);font-size:.74rem;font-weight:500;letter-spacing:.02em;padding:20px 13px;cursor:pointer;border-bottom:2px solid transparent;transition:color .18s,border-color .18s;font-family:inherit;white-space:nowrap}
-.nav-btn:hover{color:var(--ink)}
-.nav-btn.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
+nav{background:rgba(253,251,246,0.94);backdrop-filter:blur(12px);border-bottom:2px solid var(--ink);padding:0 32px;display:flex;align-items:center;position:sticky;top:0;z-index:1000;flex-wrap:wrap}
+.brand{font-family:'Newsreader',serif;font-weight:600;font-size:1.05rem;letter-spacing:.01em;color:var(--ink);padding:18px 24px 18px 0;margin-right:8px;white-space:nowrap}
+.nav-btn{background:none;border:none;color:var(--ink2);font-size:.76rem;font-weight:600;letter-spacing:.02em;padding:20px 13px;cursor:pointer;border-bottom:3px solid transparent;transition:color .18s,border-color .18s;font-family:inherit;white-space:nowrap}
+.nav-btn:hover{color:var(--accent)}
+.nav-btn.active{color:var(--accent);border-bottom-color:var(--accent)}
 
 /* LAYOUT */
-.page{display:none;padding:36px 40px;max-width:1500px;margin:0 auto;animation:fade .4s ease}
+.page{display:none;padding:36px 44px;max-width:1480px;margin:0 auto;animation:fade .4s ease}
 .page.active{display:block}
 @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
-.row{display:flex;gap:20px;margin-bottom:20px;flex-wrap:wrap}
-.col-3{flex:0 0 calc(25% - 15px);min-width:220px}
-.col-4{flex:0 0 calc(33.3% - 14px);min-width:240px}
-.col-5{flex:0 0 calc(41.6% - 12px);min-width:280px}
-.col-6{flex:0 0 calc(50% - 10px);min-width:300px}
-.col-7{flex:0 0 calc(58.3% - 9px)}
-.col-8{flex:0 0 calc(66.6% - 7px)}
-.col-9{flex:0 0 calc(75% - 5px)}
+.row{display:flex;gap:22px;margin-bottom:22px;flex-wrap:wrap}
+.col-3{flex:0 0 calc(25% - 16.5px);min-width:220px}
+.col-4{flex:0 0 calc(33.3% - 15px);min-width:240px}
+.col-5{flex:0 0 calc(41.6% - 13px);min-width:280px}
+.col-6{flex:0 0 calc(50% - 11px);min-width:300px}
+.col-7{flex:0 0 calc(58.3% - 10px)}
+.col-8{flex:0 0 calc(66.6% - 8px)}
+.col-9{flex:0 0 calc(75% - 6px)}
 .col-12{flex:0 0 100%}
 
 /* CARDS */
-.card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:22px 24px;transition:box-shadow .2s,border-color .2s}
-.card:hover{box-shadow:0 4px 24px rgba(26,29,35,0.06);border-color:var(--border2)}
-.card-title{font-size:.7rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:18px}
-.section-head{font-family:'Newsreader',serif;font-size:1.35rem;font-weight:500;letter-spacing:-.01em;color:var(--ink);margin:8px 0 18px;padding-bottom:0}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:4px;padding:22px 26px;transition:box-shadow .2s}
+.card:hover{box-shadow:0 6px 28px rgba(28,26,23,0.08)}
+.card-title{font-family:'Newsreader',serif;font-size:.95rem;font-weight:600;letter-spacing:.005em;color:var(--ink);margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+.section-head{font-family:'Newsreader',serif;font-size:1.7rem;font-weight:500;letter-spacing:-.01em;color:var(--ink);margin:8px 0 6px;line-height:1.2}
+.section-head::after{content:'';display:block;width:48px;height:3px;background:var(--accent);margin-top:12px;margin-bottom:14px}
 
-/* KPI / INSIGHT CARDS */
-.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
-.kpi{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:22px 22px 18px;position:relative;overflow:hidden;transition:box-shadow .2s,transform .2s}
-.kpi:hover{box-shadow:0 6px 28px rgba(26,29,35,0.07);transform:translateY(-2px)}
-.kpi::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent)}
-.kpi.g::before{background:var(--green)}.kpi.o::before{background:var(--orange)}.kpi.p::before{background:var(--purple)}.kpi.b::before{background:var(--blue)}
-.kpi-lbl{font-size:.7rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
-.kpi-val{font-size:2.1rem;font-weight:700;color:var(--ink);line-height:1;letter-spacing:-.02em}
-.kpi-val .unit{font-size:1.1rem;font-weight:500;color:var(--ink2)}
-.kpi-sub{font-size:.78rem;color:var(--ink2);margin-top:8px;line-height:1.4}
+/* KPI / STAT BOXES — editorial style */
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;margin-bottom:26px;background:var(--border);border:1px solid var(--border)}
+.kpi{background:var(--bg2);padding:22px 22px 18px;position:relative}
+.kpi-lbl{font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-bottom:10px}
+.kpi-val{font-family:'Newsreader',serif;font-size:2.4rem;font-weight:500;color:var(--ink);line-height:1;letter-spacing:-.01em}
+.kpi-val .unit{font-size:1.2rem;color:var(--ink2)}
+.kpi-sub{font-size:.8rem;color:var(--ink2);margin-top:10px;line-height:1.45;font-style:italic;font-family:'Newsreader',serif}
 
 /* PLOT */
 .plot-wrap{width:100%;height:300px}
 .plot-wrap.tall{height:380px}
 .plot-wrap.map{height:560px}
-#map_europe{width:100%;height:100%;border-radius:10px}
+#map_europe{width:100%;height:100%;border-radius:3px}
 
-/* SIDEBAR CONTROLS */
-.sidebar{background:var(--bg3);border:1px solid var(--border);border-radius:14px;padding:22px}
-.ctrl-label{font-size:.7rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-bottom:7px;margin-top:16px;display:block}
+/* SIDEBAR */
+.sidebar{background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:22px}
+.ctrl-label{font-size:.68rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);margin-bottom:7px;margin-top:16px;display:block}
 .ctrl-label:first-child{margin-top:0}
-select,input[type=range]{width:100%;background:#fff;border:1px solid var(--border2);color:var(--ink);border-radius:9px;padding:9px 12px;font-size:.86rem;font-family:inherit;outline:none;cursor:pointer;transition:border-color .15s}
+select,input[type=range]{width:100%;background:var(--bg2);border:1px solid var(--border2);color:var(--ink);border-radius:3px;padding:9px 12px;font-size:.86rem;font-family:inherit;outline:none;cursor:pointer;transition:border-color .15s}
 select:focus{border-color:var(--accent)}
 input[type=range]{padding:6px 0;accent-color:var(--accent)}
 .range-row{display:flex;justify-content:space-between;font-size:.72rem;color:var(--muted);margin-top:3px}
-.note{font-size:.78rem;color:var(--ink2);line-height:1.55;margin-top:16px;border-top:1px solid var(--border);padding-top:14px}
+.note{font-size:.82rem;color:var(--ink2);line-height:1.6;margin-top:16px;border-top:1px solid var(--border);padding-top:14px;font-family:'Newsreader',serif}
 
-/* INSIGHT TEXT BLOCK */
-.insight{background:var(--accent-soft);border-radius:12px;padding:18px 22px;margin-bottom:20px;font-size:.92rem;line-height:1.6;color:var(--ink2)}
+/* INSIGHT / LEAD — editorial prose */
+.insight{background:var(--accent-soft);border-left:3px solid var(--accent);border-radius:0 4px 4px 0;padding:16px 22px;margin-bottom:22px;font-size:.95rem;line-height:1.65;color:var(--ink2);font-family:'Newsreader',serif}
 .insight b{color:var(--accent);font-weight:600}
-.lead{font-family:'Newsreader',serif;font-size:1.05rem;line-height:1.65;color:var(--ink2);max-width:860px;margin-bottom:22px}
+.lead{font-family:'Newsreader',serif;font-size:1.2rem;line-height:1.7;color:var(--ink2);max-width:840px;margin-bottom:26px;font-weight:400}
 
 /* LOADER */
 .loader{display:flex;align-items:center;justify-content:center;height:200px;color:var(--muted);font-size:.85rem}
@@ -96,25 +94,25 @@ input[type=range]{padding:6px 0;accent-color:var(--accent)}
 @keyframes spin{to{transform:rotate(360deg)}}
 
 /* ABOUT */
-.about-body{max-width:780px;margin:0 auto;color:var(--ink2);line-height:1.8}
-.about-body h2{font-family:'Newsreader',serif;color:var(--ink);font-weight:500;margin-bottom:14px;font-size:1.8rem}
-.about-body h4{color:var(--accent);font-weight:600;letter-spacing:.04em;text-transform:uppercase;font-size:.78rem;margin:24px 0 10px}
-.about-body li{margin-bottom:7px}
+.about-body{max-width:760px;margin:0 auto;color:var(--ink2);line-height:1.85;font-family:'Newsreader',serif;font-size:1.02rem}
+.about-body h2{font-family:'Newsreader',serif;color:var(--ink);font-weight:500;margin-bottom:14px;font-size:2rem}
+.about-body h4{font-family:'Source Sans 3',sans-serif;color:var(--accent);font-weight:700;letter-spacing:.06em;text-transform:uppercase;font-size:.76rem;margin:26px 0 10px}
+.about-body li{margin-bottom:8px}
 .about-body b{color:var(--ink);font-weight:600}
 
 /* SCROLLBAR */
-::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar{width:9px;height:9px}
 ::-webkit-scrollbar-track{background:var(--bg3)}
-::-webkit-scrollbar-thumb{background:var(--faint);border-radius:4px}
+::-webkit-scrollbar-thumb{background:var(--faint);border-radius:0}
 ::-webkit-scrollbar-thumb:hover{background:var(--muted)}
 
 /* LEAFLET */
-.leaflet-container{background:#eef1f4 !important}
-.leaflet-popup-content-wrapper{background:#fff;color:var(--ink);border:1px solid var(--border);border-radius:10px;box-shadow:0 6px 24px rgba(0,0,0,.12)}
-.leaflet-popup-tip{background:#fff}
-.leaflet-control-zoom a{background:#fff;color:var(--ink);border-color:var(--border)}
-.leaflet-bar{border:1px solid var(--border)!important;box-shadow:0 2px 8px rgba(0,0,0,.08)!important}
-.info.legend{background:#fff;border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--ink);box-shadow:0 2px 12px rgba(0,0,0,.06)}
+.leaflet-container{background:#e8e0d0 !important}
+.leaflet-popup-content-wrapper{background:var(--bg2);color:var(--ink);border:1px solid var(--border);border-radius:4px;box-shadow:0 6px 24px rgba(0,0,0,.14)}
+.leaflet-popup-tip{background:var(--bg2)}
+.leaflet-control-zoom a{background:var(--bg2);color:var(--ink);border-color:var(--border)}
+.leaflet-bar{border:1px solid var(--border)!important}
+.info.legend{background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:10px 14px;color:var(--ink);box-shadow:0 2px 12px rgba(0,0,0,.08)}
 
 @media(max-width:900px){.col-3,.col-4,.col-5,.col-6,.col-7,.col-8,.col-9{flex:0 0 100%}.kpi-grid{grid-template-columns:repeat(2,1fr)}.page{padding:24px 18px}}
 </style>
@@ -580,26 +578,26 @@ input[type=range]{padding:6px 0;accent-color:var(--accent)}
 // GLOBALS & CONFIG
 // ═══════════════════════════════════════════════════════════
 const C = {
-  bg:'#ffffff', bg2:'#ffffff', bg3:'#f7f8fa', border:'#e8eaed',
-  blue:'#2166ac', purple:'#8c5fa8', orange:'#e08214', green:'#1b7837',
-  red:'#c0584f', pink:'#c994c7', teal:'#35978f',
-  txt:'#1a1d23', muted:'#9aa0a8', ink2:'#4a4f57', accent:'#1b7837'
+  bg:'#f5f0e6', bg2:'#fdfbf6', bg3:'#efe9dc', border:'#ddd4c2',
+  blue:'#2b5c7e', purple:'#6b5b95', orange:'#c47a28', green:'#5a7340',
+  red:'#9e2b25', pink:'#a86a8c', teal:'#3d7068', ochre:'#b8902a',
+  txt:'#1c1a17', muted:'#8a8170', ink2:'#4a443b', accent:'#9e2b25'
 }
 const WFH_ORDER = ['Never','Rarely','Sometimes','Often','Always']
-// Ordinal sequence: light grey -> slate -> blue -> amber -> deep coral (clear intensity ramp, colorblind-safe)
-const WFH_COLORS = {'Never':'#cfd4da','Rarely':'#92b4d4','Sometimes':'#2166ac','Often':'#e08214','Always':'#c0392b'}
-const WAVE_COLORS = {'2015':'#8c5fa8','2021':'#2166ac','2024':'#e08214'}
-// Qualitative palette: maximally distinct, colorblind-safe (Okabe-Ito inspired)
-const CAT = ['#2166ac','#e08214','#1b7837','#8c5fa8','#c0392b','#35978f','#d6a419','#c994c7']
-const GRID = '#eef0f3'
+// Ordinal ramp in print tones: parchment grey -> slate blue -> petrol -> ochre -> brick
+const WFH_COLORS = {'Never':'#c8bfa9','Rarely':'#7d9bb0','Sometimes':'#2b5c7e','Often':'#c47a28','Always':'#9e2b25'}
+const WAVE_COLORS = {'2015':'#6b5b95','2021':'#2b5c7e','2024':'#c47a28'}
+// Qualitative print palette
+const CAT = ['#2b5c7e','#c47a28','#5a7340','#6b5b95','#9e2b25','#3d7068','#b8902a','#a86a8c']
+const GRID = '#e6ded0'
 const PLOTLY_LAYOUT = (extra={}) => ({
-  paper_bgcolor:'#ffffff', plot_bgcolor:'#ffffff',
-  font:{color:C.ink2, family:'Inter, sans-serif', size:11},
+  paper_bgcolor:'#fdfbf6', plot_bgcolor:'#fdfbf6',
+  font:{color:C.ink2, family:'Source Sans 3, sans-serif', size:11},
   margin:{l:50,r:16,t:16,b:50},
-  xaxis:{gridcolor:GRID, zerolinecolor:'#e0e3e7', linecolor:'#e0e3e7', tickfont:{color:C.muted,size:9.5}},
-  yaxis:{gridcolor:GRID, zerolinecolor:'#e0e3e7', linecolor:'#e0e3e7', tickfont:{color:C.muted,size:9.5}},
-  legend:{bgcolor:'rgba(255,255,255,0.7)', font:{color:C.ink2, size:9.5}},
-  hoverlabel:{bgcolor:'#ffffff', bordercolor:C.border, font:{color:C.txt, family:'Inter, sans-serif'}},
+  xaxis:{gridcolor:GRID, zerolinecolor:'#d8cdb8', linecolor:'#d8cdb8', tickfont:{color:C.muted,size:9.5}},
+  yaxis:{gridcolor:GRID, zerolinecolor:'#d8cdb8', linecolor:'#d8cdb8', tickfont:{color:C.muted,size:9.5}},
+  legend:{bgcolor:'rgba(253,251,246,0.7)', font:{color:C.ink2, size:9.5}},
+  hoverlabel:{bgcolor:'#fdfbf6', bordercolor:C.border, font:{color:C.txt, family:'Source Sans 3, sans-serif'}},
   ...extra
 })
 const PLOTLY_CONFIG = {displayModeBar:false, responsive:true}
@@ -654,19 +652,19 @@ async function initOverview() {
   const traces = countries.map(geo => {
     const pts = trend.filter(d=>d.geo===geo).sort((a,b)=>a.year-b.year)
     return {x:pts.map(d=>d.year), y:pts.map(d=>d.pct), mode:'lines',
-      line:{color:'rgba(59,110,165,0.13)',width:1},
+      line:{color:'rgba(43,92,126,0.13)',width:1},
       hovertemplate:`${pts[0]?.country||geo} %{x}: <b>%{y:.1f}%</b><extra></extra>`,
       showlegend:false}
   })
   traces.push({
     x:eu.map(d=>d.year), y:eu.map(d=>d.pct), mode:'lines', fill:'tozeroy',
-    fillcolor:'rgba(59,110,165,0.06)', line:{color:'rgba(0,0,0,0)',width:0},
+    fillcolor:'rgba(43,92,126,0.06)', line:{color:'rgba(0,0,0,0)',width:0},
     hoverinfo:'skip', showlegend:false
   })
   traces.push({
     x:eu.map(d=>d.year), y:eu.map(d=>d.pct), mode:'lines+markers',
     line:{color:C.blue,width:3,shape:'spline'},
-    marker:{size:6,color:C.blue,line:{color:'#ffffff',width:1.5}},
+    marker:{size:6,color:C.blue,line:{color:'#fdfbf6',width:1.5}},
     name:'EU average',
     hovertemplate:'EU avg <b>%{x}</b>: <b>%{y:.1f}%</b><extra></extra>'
   })
@@ -694,7 +692,7 @@ async function initOverview() {
     textposition:'outside', textfont:{color:C.muted,size:9},
     marker:{
       color:sorted.map(d=>d.pct),
-      colorscale:[[0,'#dbe5ef'],[0.5,'#5a8fc0'],[1,C.blue]],
+      colorscale:[[0,'#e0d6c2'],[0.5,'#5a8fc0'],[1,C.blue]],
       showscale:false, line:{color:'rgba(0,0,0,0)',width:0}
     },
     hovertemplate:'<b>%{y}</b>: %{x:.1f}% usually WFH<extra></extra>'
@@ -740,11 +738,11 @@ async function plotIotWfh() {
   const traces = [
     {x:d.map(r=>r.year), y:d.map(r=>r.iot_devices), name:'IoT devices (bn)',
      mode:'lines+markers', yaxis:'y', line:{color:C.purple,width:3,shape:'spline'},
-     marker:{size:6,color:C.purple,line:{color:'#ffffff',width:1.5}},
+     marker:{size:6,color:C.purple,line:{color:'#fdfbf6',width:1.5}},
      hovertemplate:'%{x}: <b>%{y} bn</b> IoT devices<extra></extra>'},
     {x:d.map(r=>r.year), y:d.map(r=>r.wfh_pct), name:'EU remote work (%)',
      mode:'lines+markers', yaxis:'y2', line:{color:C.blue,width:3,shape:'spline'},
-     marker:{size:6,color:C.blue,line:{color:'#ffffff',width:1.5}},
+     marker:{size:6,color:C.blue,line:{color:'#fdfbf6',width:1.5}},
      hovertemplate:'%{x}: <b>%{y:.1f}%</b> usually WFH<extra></extra>'}
   ]
   Plotly.newPlot('plot-iot-wfh', traces, PLOTLY_LAYOUT({
@@ -778,10 +776,10 @@ function lerpColor(a,b,t) {
 
 // Color scale: dark navy → teal → amber
 function choroplethColor(pct, minV, maxV) {
-  if (pct == null) return '#eef0f3'
+  if (pct == null) return '#ece3d2'
   const t = Math.max(0, Math.min(1, (pct - minV) / (maxV - minV || 1)))
-  if (t < 0.5) return lerpColor('#dce8e0', '#5a9a78', t * 2)
-  return lerpColor('#5a9a78', '#2f6f4f', (t - 0.5) * 2)
+  if (t < 0.5) return lerpColor('#ece3d2', '#7d9bb0', t * 2)
+  return lerpColor('#7d9bb0', '#2b5c7e', (t - 0.5) * 2)
 }
 
 async function initMap() {
@@ -831,7 +829,7 @@ async function updateMap() {
   const tooltip = document.getElementById('map-tooltip') || (() => {
     const d = document.createElement('div')
     d.id = 'map-tooltip'
-    d.style.cssText = `position:fixed;background:#ffffff;border:1px solid #e8eaed;border-radius:10px;padding:12px 16px;pointer-events:none;display:none;z-index:9999;font-family:'Inter',sans-serif;min-width:170px;box-shadow:0 6px 24px rgba(0,0,0,0.1);`
+    d.style.cssText = `position:fixed;background:#fdfbf6;border:1px solid #ddd4c2;border-radius:10px;padding:12px 16px;pointer-events:none;display:none;z-index:9999;font-family:'Inter',sans-serif;min-width:170px;box-shadow:0 6px 24px rgba(0,0,0,0.1);`
     document.body.appendChild(d)
     return d
   })()
@@ -843,7 +841,7 @@ async function updateMap() {
       return {
         fillColor: choroplethColor(pct, minV, maxV),
         fillOpacity: pct != null ? 0.82 : 0.3,
-        color: '#ffffff',
+        color: '#fdfbf6',
         weight: 0.8,
         opacity: 1
       }
@@ -863,7 +861,7 @@ async function updateMap() {
             <div style="font-weight:700;color:#2f6f4f;font-size:.9rem;margin-bottom:4px">${name}</div>
             <div style="color:#1a1d23;font-size:1.1rem;font-weight:700">${pct != null ? pct.toFixed(1)+'%' : 'No data'}</div>
             <div style="color:#9aa0a8;font-size:.75rem;margin-top:2px">usually working from home · ${yr}</div>
-            ${pct != null ? `<div style="margin-top:6px;height:4px;border-radius:2px;background:linear-gradient(to right,#dce8e0,#5a9a78,#2f6f4f)"><div style="height:100%;width:${Math.round((pct-minV)/(maxV-minV)*100)}%;background:#1a1d23;border-radius:2px;opacity:.25"></div></div>` : ''}
+            ${pct != null ? `<div style="margin-top:6px;height:4px;border-radius:2px;background:linear-gradient(to right,#ece3d2,#7d9bb0,#2b5c7e)"><div style="height:100%;width:${Math.round((pct-minV)/(maxV-minV)*100)}%;background:#1a1d23;border-radius:2px;opacity:.25"></div></div>` : ''}
           `
         },
         mouseout: () => { tooltip.style.display = 'none' },
@@ -873,7 +871,7 @@ async function updateMap() {
           if (euroName) selectCountryAndGo(euroName.country)
         },
         mouseover: e => {
-          e.target.setStyle({ weight: 2, color: '#ffffff', fillOpacity: 0.95 })
+          e.target.setStyle({ weight: 2, color: '#fdfbf6', fillOpacity: 0.95 })
           e.target.bringToFront()
         },
         mouseout: e => {
@@ -894,12 +892,12 @@ function updateMapLegend(minV, maxV) {
   mapLegend = L.control({position:'bottomright'})
   mapLegend.onAdd = () => {
     const div = L.DomUtil.create('div','info legend')
-    div.style.cssText = 'background:#ffffff;border:1px solid #e8eaed;border-radius:10px;padding:12px 16px;color:#1a1d23;font-family:Inter,sans-serif;min-width:160px;box-shadow:0 2px 12px rgba(0,0,0,0.06)'
+    div.style.cssText = 'background:#fdfbf6;border:1px solid #ddd4c2;border-radius:10px;padding:12px 16px;color:#1a1d23;font-family:Inter,sans-serif;min-width:160px;box-shadow:0 2px 12px rgba(0,0,0,0.06)'
     const steps = [0, 25, 50, 75, 100]
     const vals  = steps.map(s => minV + (maxV-minV)*s/100)
     div.innerHTML = `
       <div style="font-size:.68rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#9aa0a8;margin-bottom:8px">% usually WFH</div>
-      <div style="height:10px;border-radius:5px;background:linear-gradient(to right,#dce8e0,#5a9a78,#2f6f4f);margin-bottom:6px"></div>
+      <div style="height:10px;border-radius:5px;background:linear-gradient(to right,#ece3d2,#7d9bb0,#2b5c7e);margin-bottom:6px"></div>
       <div style="display:flex;justify-content:space-between;font-size:.7rem;color:#9aa0a8;font-family:'Interex Mono',monospace">
         <span>${minV.toFixed(0)}%</span><span>${((minV+maxV)/2).toFixed(0)}%</span><span>${maxV.toFixed(0)}%</span>
       </div>
@@ -957,7 +955,7 @@ async function updateWellbeing() {
   Plotly.react('plot-who5-bar', [
     // Background danger band
     {type:'bar', x:data.map(d=>d.wfh), y:data.map(d=>50),
-     marker:{color:'rgba(192,88,79,0.07)'}, showlegend:false, hoverinfo:'skip'},
+     marker:{color:'rgba(158,43,37,0.06)'}, showlegend:false, hoverinfo:'skip'},
     // Main bars
     {type:'bar', x:data.map(d=>d.wfh), y:data.map(d=>d.who5),
      error_y:{type:'data', array:data.map(d=>d.se*1.96), visible:true, color:'rgba(26,29,35,0.35)', thickness:2, width:5},
@@ -976,7 +974,7 @@ async function updateWellbeing() {
            tickvals:[0,25,50,75,100]},
     shapes:[
       {type:'line',x0:-0.5,x1:data.length-0.5,y0:50,y1:50,line:{color:C.red,width:1.5,dash:'dash'}},
-      {type:'rect',x0:-0.5,x1:data.length-0.5,y0:0,y1:50,fillcolor:'rgba(192,88,79,0.05)',line:{width:0}}
+      {type:'rect',x0:-0.5,x1:data.length-0.5,y0:0,y1:50,fillcolor:'rgba(158,43,37,0.05)',line:{width:0}}
     ],
     annotations:[{x:data.length-0.5,y:51,text:'⚠ depression risk threshold',
       font:{color:C.red,size:8.5},showarrow:false,xanchor:'right'}],
@@ -990,7 +988,7 @@ async function plotWho5Waves() {
     const pts = WFH_ORDER.map(wfh => { const r=data.find(d=>d.wave===w&&d.wfh===wfh); return r?r.who5:null })
     return {x:WFH_ORDER, y:pts, mode:'lines+markers', name:`Wave ${w}`,
       line:{color:WAVE_COLORS[w],width:2.5,shape:'spline'},
-      marker:{size:9,color:WAVE_COLORS[w],line:{color:'#ffffff',width:2}},
+      marker:{size:9,color:WAVE_COLORS[w],line:{color:'#fdfbf6',width:2}},
       hovertemplate:`Wave ${w} | <b>%{x}</b>: <b>%{y:.1f}</b>/100<extra></extra>`}
   })
   traces.push({x:WFH_ORDER, y:[50,50,50,50,50], mode:'lines', line:{color:C.red,dash:'dash',width:1.5}, showlegend:false, hoverinfo:'skip'})
@@ -999,7 +997,7 @@ async function plotWho5Waves() {
            gridcolor:'rgba(37,43,56,0.6)'},
     xaxis:{...PLOTLY_LAYOUT().xaxis, gridcolor:'rgba(0,0,0,0)'},
     showlegend:true,
-    shapes:[{type:'rect',x0:-0.5,x1:4.5,y0:30,y1:50,fillcolor:'rgba(192,88,79,0.06)',line:{width:0}}],
+    shapes:[{type:'rect',x0:-0.5,x1:4.5,y0:30,y1:50,fillcolor:'rgba(158,43,37,0.06)',line:{width:0}}],
     annotations:[{x:4.3,y:49,text:'risk zone',font:{color:C.red,size:8},showarrow:false}]
   }), PLOTLY_CONFIG)
 }
@@ -1268,7 +1266,7 @@ async function plotCommuteDist() {
     type:'bar', x:d.map(r=>r.band+' min'), y:d.map(r=>r.n),
     text:d.map(r=>(r.n/total*100).toFixed(0)+'%'),
     textposition:'outside', textfont:{color:C.muted,size:9},
-    marker:{color:d.map((r,i)=>lerpColor('#cfe0d6',C.green,i/(d.length-1))),
+    marker:{color:d.map((r,i)=>lerpColor('#e0d6c2',C.green,i/(d.length-1))),
             line:{color:'rgba(0,0,0,0)',width:0}},
     hovertemplate:'<b>%{x}</b> one-way<br>%{y} respondents<extra></extra>'
   }], PLOTLY_LAYOUT({
@@ -1326,7 +1324,7 @@ async function updateFamily() {
       x:WFH_ORDER, y:WFH_ORDER.map(w=>{const r=data.find(d=>d.family_type===f&&d.wfh===w);return r?r.who5:null}),
       mode:'lines+markers', name:f,
       line:{color:FAMILY_COLORS[f],width:2.5,shape:'spline'},
-      marker:{size:8,color:FAMILY_COLORS[f],line:{color:'#ffffff',width:1.5}},
+      marker:{size:8,color:FAMILY_COLORS[f],line:{color:'#fdfbf6',width:1.5}},
       error_y:{type:'data',array:WFH_ORDER.map(w=>{const r=data.find(d=>d.family_type===f&&d.wfh===w);return r?r.se*1.96:0}),
                visible:true,color:'rgba(255,255,255,0.2)',thickness:1,width:3},
       hovertemplate:`${f}<br><b>%{x}</b>: %{y:.1f} WHO-5<extra></extra>`
@@ -1349,7 +1347,7 @@ async function updateFamily() {
       }),
       mode:'lines+markers', name:f,
       line:{color:FAMILY_COLORS[f],width:2.5,shape:'spline'},
-      marker:{size:8,color:FAMILY_COLORS[f],line:{color:'#ffffff',width:1.5}},
+      marker:{size:8,color:FAMILY_COLORS[f],line:{color:'#fdfbf6',width:1.5}},
       hovertemplate:`${f}<br><b>%{x}</b>: %{y:.1f}% satisfied<extra></extra>`
     }))
     Plotly.react('plot-family-main', traces, PLOTLY_LAYOUT({
@@ -1397,7 +1395,7 @@ async function plotSalaryDist() {
   const d = await load('hi_salary')
   const bands = ['$40K-60K','$60K-80K','$80K-100K','$100K-120K','$120K+']
   const arrs = [...new Set(d.map(r=>r.work_arrangement))]
-  const bandColors = bands.map((b,i)=>lerpColor('#cfe0d6',C.green,i/(bands.length-1)))
+  const bandColors = bands.map((b,i)=>lerpColor('#e0d6c2',C.green,i/(bands.length-1)))
   const traces = bands.map((b,i) => ({
     type:'bar', name:b, x:arrs,
     y:arrs.map(a=>{const r=d.find(x=>x.work_arrangement===a&&x.salary_range===b);return r?r.pct:0}),
@@ -1444,8 +1442,8 @@ initDistributions.done = false
 function violinTrace(yvals, name, color) {
   return {
     type:'violin', y:yvals||[], name:name,
-    box:{visible:true, width:0.12, fillcolor:'#ffffff', line:{color:'rgba(0,0,0,0.35)'}},
-    meanline:{visible:true, color:'#ffffff'},
+    box:{visible:true, width:0.12, fillcolor:'#fdfbf6', line:{color:'rgba(28,26,23,0.35)'}},
+    meanline:{visible:true, color:'#fdfbf6'},
     points:false, spanmode:'hard',
     fillcolor:hexToRgba(color,0.72), opacity:1,
     line:{color:color, width:1.5},
@@ -1600,7 +1598,7 @@ async function plotFirmCountry() {
     text:sorted.map(r=>r.pct.toFixed(0)+'%'), textposition:'outside', textfont:{color:C.muted,size:9},
     marker:{
       color:sorted.map(r=>r.geo==='EU'?C.orange:r.pct),
-      colorscale:[[0,'#d4e3d9'],[0.5,C.teal],[1,C.green]], showscale:false
+      colorscale:[[0,'#e0d6c2'],[0.5,C.teal],[1,C.green]], showscale:false
     },
     hovertemplate:'<b>%{y}</b>: %{x:.1f}% of enterprises<extra></extra>'
   }], PLOTLY_LAYOUT({
@@ -1634,7 +1632,7 @@ async function plotAgGenderGap() {
     marker:{color:C.pink,size:9}, hovertemplate:'%{y} — Women: <b>%{x:.1f}%</b><extra></extra>'})
   Plotly.newPlot('plot-ag-gender-gap', traces, PLOTLY_LAYOUT({
     xaxis:{...PLOTLY_LAYOUT().xaxis, ticksuffix:'%', title:'% usually working from home'},
-    showlegend:true, legend:{x:.98,y:.02,xanchor:'right',bgcolor:'rgba(255,255,255,0.8)'},
+    showlegend:true, legend:{x:.98,y:.02,xanchor:'right',bgcolor:'rgba(253,251,246,0.8)'},
     margin:{l:100,r:16,t:16,b:45}
   }), PLOTLY_CONFIG)
 }
@@ -1645,14 +1643,14 @@ async function plotAgGenderTrend() {
   const m = mk('M'), f = mk('F')
   Plotly.newPlot('plot-ag-gender-trend', [
     {x:m.map(r=>r.year), y:m.map(r=>r.pct), name:'Men', mode:'lines+markers',
-     line:{color:C.blue,width:2.5,shape:'spline'}, marker:{size:6,color:C.blue,line:{color:'#fff',width:1.5}},
+     line:{color:C.blue,width:2.5,shape:'spline'}, marker:{size:6,color:C.blue,line:{color:'#fdfbf6',width:1.5}},
      hovertemplate:'Men %{x}: <b>%{y:.1f}%</b><extra></extra>'},
     {x:f.map(r=>r.year), y:f.map(r=>r.pct), name:'Women', mode:'lines+markers',
-     line:{color:C.pink,width:2.5,shape:'spline'}, marker:{size:6,color:C.pink,line:{color:'#fff',width:1.5}},
+     line:{color:C.pink,width:2.5,shape:'spline'}, marker:{size:6,color:C.pink,line:{color:'#fdfbf6',width:1.5}},
      hovertemplate:'Women %{x}: <b>%{y:.1f}%</b><extra></extra>'}
   ], PLOTLY_LAYOUT({
     yaxis:{...PLOTLY_LAYOUT().yaxis, ticksuffix:'%', title:'% usually WFH'},
-    showlegend:true, legend:{x:.02,y:.98,bgcolor:'rgba(255,255,255,0.7)'},
+    showlegend:true, legend:{x:.02,y:.98,bgcolor:'rgba(253,251,246,0.75)'},
     shapes:[{type:'rect',x0:2019.8,x1:2021.2,y0:0,y1:1,yref:'paper',fillcolor:C.orange,opacity:.06,line:{width:0}}],
     margin:{l:50,r:16,t:16,b:40}
   }), PLOTLY_CONFIG)
@@ -1665,12 +1663,12 @@ async function plotAgAgeTrend() {
   const traces = Object.keys(ageMap).map(a => {
     const pts = d.filter(r=>r.age===a).sort((x,y)=>x.year-y.year)
     return {x:pts.map(r=>r.year), y:pts.map(r=>r.pct), name:ageMap[a], mode:'lines+markers',
-      line:{color:ageColors[a],width:2.5,shape:'spline'}, marker:{size:5,color:ageColors[a],line:{color:'#fff',width:1.5}},
+      line:{color:ageColors[a],width:2.5,shape:'spline'}, marker:{size:5,color:ageColors[a],line:{color:'#fdfbf6',width:1.5}},
       hovertemplate:`${ageMap[a]} %{x}: <b>%{y:.1f}%</b><extra></extra>`}
   })
   Plotly.newPlot('plot-ag-age-trend', traces, PLOTLY_LAYOUT({
     yaxis:{...PLOTLY_LAYOUT().yaxis, ticksuffix:'%', title:'% usually WFH'},
-    showlegend:true, legend:{x:.02,y:.98,bgcolor:'rgba(255,255,255,0.7)'},
+    showlegend:true, legend:{x:.02,y:.98,bgcolor:'rgba(253,251,246,0.75)'},
     shapes:[{type:'rect',x0:2019.8,x1:2021.2,y0:0,y1:1,yref:'paper',fillcolor:C.orange,opacity:.06,line:{width:0}}],
     margin:{l:50,r:16,t:16,b:40}
   }), PLOTLY_CONFIG)
@@ -1701,12 +1699,12 @@ async function plotAgWho5Gender() {
     x:WFH_ORDER, y:WFH_ORDER.map(w=>{const r=d.find(x=>x.gender===g&&x.wfh===w);return r?r.who5:null}),
     name:g, mode:'lines+markers',
     line:{color:g==='Male'?C.blue:C.pink,width:2.5,shape:'spline'},
-    marker:{size:7,color:g==='Male'?C.blue:C.pink,line:{color:'#fff',width:1.5}},
+    marker:{size:7,color:g==='Male'?C.blue:C.pink,line:{color:'#fdfbf6',width:1.5}},
     hovertemplate:`${g} — %{x}: <b>%{y:.1f}</b><extra></extra>`
   }))
   Plotly.newPlot('plot-ag-who5-gender', traces, PLOTLY_LAYOUT({
     yaxis:{...PLOTLY_LAYOUT().yaxis, range:[55,80], title:'WHO-5 Index'},
-    showlegend:true, legend:{x:.02,y:.02,bgcolor:'rgba(255,255,255,0.7)'},
+    showlegend:true, legend:{x:.02,y:.02,bgcolor:'rgba(253,251,246,0.75)'},
     margin:{l:50,r:16,t:16,b:45}
   }), PLOTLY_CONFIG)
 }
@@ -1719,7 +1717,7 @@ async function plotAgWho5Age() {
     x:WFH_ORDER, y:WFH_ORDER.map(w=>{const r=d.find(x=>x.age_band===b&&x.wfh===w);return r?r.who5:null}),
     name:b, mode:'lines+markers',
     line:{color:bandColors[b],width:2.5,shape:'spline'},
-    marker:{size:6,color:bandColors[b],line:{color:'#fff',width:1.5}},
+    marker:{size:6,color:bandColors[b],line:{color:'#fdfbf6',width:1.5}},
     hovertemplate:`Age ${b} — %{x}: <b>%{y:.1f}</b><extra></extra>`
   }))
   Plotly.newPlot('plot-ag-who5-age', traces, PLOTLY_LAYOUT({
@@ -1753,7 +1751,7 @@ async function plotKfScatter() {
      line:{color:'#c4c8ce',width:2,dash:'dot'}, showlegend:false, hoverinfo:'skip'},
     // points
     {x:d.map(r=>r.pct_high_wfh), y:d.map(r=>r.who5), mode:'markers+text',
-     marker:{size:[18,24,18], color:d.map(r=>WAVE_COLORS[r.wave]), line:{color:'#fff',width:2}},
+     marker:{size:[18,24,18], color:d.map(r=>WAVE_COLORS[r.wave]), line:{color:'#fdfbf6',width:2}},
      text:d.map(r=>r.wave), textposition:'top center', textfont:{size:12,color:C.txt,family:'Inter'},
      showlegend:false,
      hovertemplate:'<b>%{text}</b><br>High-WFH: %{x:.1f}%<br>WHO-5: %{y:.1f}<extra></extra>',
@@ -1779,7 +1777,7 @@ async function plotKfSlope() {
     const y15=get('2015',wfh), y24=get('2024',wfh)
     return {x:[0,1], y:[y15,y24], mode:'lines+markers+text',
       name:wfh, line:{color:WFH_COLORS[wfh],width:3},
-      marker:{size:9,color:WFH_COLORS[wfh],line:{color:'#fff',width:1.5}},
+      marker:{size:9,color:WFH_COLORS[wfh],line:{color:'#fdfbf6',width:1.5}},
       text:['', '  '+wfh], textposition:'middle right', textfont:{size:10,color:WFH_COLORS[wfh]},
       cliponaxis:false,
       hovertemplate:`${wfh} %{x}: <b>%{y:.1f}</b><extra></extra>`, showlegend:false}
@@ -1829,7 +1827,7 @@ async function plotKfWaffle() {
   }
   Plotly.newPlot('plot-kf-waffle', [{
     x:xs, y:ys, mode:'markers',
-    marker:{size:20, color:colors, symbol:'square', line:{color:'#fff',width:2}},
+    marker:{size:20, color:colors, symbol:'square', line:{color:'#fdfbf6',width:2}},
     hoverinfo:'skip', showlegend:false
   }], PLOTLY_LAYOUT({
     xaxis:{visible:false, range:[-0.5,9.5]},
@@ -1855,7 +1853,7 @@ async function plotKfBump() {
     return {
       x:years, y:pts, mode:'lines+markers', name:ctry,
       line:{color:isTop?CAT[top5.indexOf(ctry)%CAT.length]:'#d4d7dc', width:isTop?3:1.5, shape:'spline'},
-      marker:{size:isTop?8:5, color:isTop?CAT[top5.indexOf(ctry)%CAT.length]:'#d4d7dc', line:{color:'#fff',width:1}},
+      marker:{size:isTop?8:5, color:isTop?CAT[top5.indexOf(ctry)%CAT.length]:'#d4d7dc', line:{color:'#fdfbf6',width:1}},
       opacity:isTop?1:0.5, showlegend:isTop,
       hovertemplate:`<b>${ctry}</b> %{x}: rank #%{y}<extra></extra>`
     }
@@ -1911,14 +1909,14 @@ async function plotGalRadial() {
     type:'barpolar',
     r:d.map(x=>x.who5), theta:d.map(x=>short(x.sector)),
     marker:{color:d.map(x=>x.who5),
-      colorscale:[[0,'#c0392b'],[0.5,'#e08214'],[1,'#1b7837']], showscale:false,
-      line:{color:'#fff',width:1}},
+      colorscale:[[0,'#9e2b25'],[0.5,'#c47a28'],[1,'#5a7340']], showscale:false,
+      line:{color:'#fdfbf6',width:1}},
     hovertemplate:'%{theta}<br>WHO-5: <b>%{r:.1f}</b><extra></extra>'
   }], {
-    paper_bgcolor:'#ffffff',
+    paper_bgcolor:'#fdfbf6',
     font:{color:C.ink2,family:'Inter',size:9},
     polar:{
-      bgcolor:'#fff',
+      bgcolor:'#fdfbf6',
       radialaxis:{range:[55,72],tickfont:{size:8,color:C.muted},gridcolor:GRID,angle:90},
       angularaxis:{tickfont:{size:7.5,color:C.ink2},gridcolor:GRID,rotation:90,direction:'clockwise'}
     },
@@ -1937,7 +1935,7 @@ async function plotGalHeatmap() {
   const z = countries.map(ct => years.map(y=>{const r=d.find(x=>x.country===ct&&x.year===y);return r?r.pct:null}))
   Plotly.newPlot('gal-heatmap', [{
     type:'heatmap', z:z, x:years, y:countries,
-    colorscale:[[0,'#f4f7f5'],[0.3,'#a8cbb7'],[0.6,'#4c9a6e'],[1,'#1b7837']],
+    colorscale:[[0,'#f2ece0'],[0.3,'#bcc9c4'],[0.6,'#6a8a92'],[1,'#2b5c7e']],
     hovertemplate:'%{y} %{x}: <b>%{z:.1f}%</b><extra></extra>',
     colorbar:{title:{text:'%',side:'right'},thickness:10,len:0.7,tickfont:{size:8,color:C.muted}}
   }], PLOTLY_LAYOUT({
@@ -1958,7 +1956,7 @@ async function plotGalBarbell() {
       line:{color:'#d4d7dc',width:2.5}, showlegend:false, hoverinfo:'skip'})
   })
   const mk = (key,color,name)=>({x:top.map(r=>r[key]),y:top.map(r=>r.country),mode:'markers',name:name,
-    marker:{color:color,size:9,line:{color:'#fff',width:1}},
+    marker:{color:color,size:9,line:{color:'#fdfbf6',width:1}},
     hovertemplate:`%{y} \u2014 ${name}: <b>%{x:.1f}%</b><extra></extra>`})
   traces.push(mk('y2015',WAVE_COLORS['2015'],'2015'))
   traces.push(mk('y2021',WAVE_COLORS['2021'],'2021'))
@@ -1980,7 +1978,7 @@ async function plotGalSmallMult() {
   const GEO_MAP = {EL:'GR', UK:'GB'}
   const allVals = sm.map(r=>r.pct)
   const maxV = d3.max(allVals)
-  const color = d3.scaleSequential(d3.interpolateRgb('#eef0f3','#1b7837')).domain([0,maxV])
+  const color = d3.scaleSequential(d3.interpolateRgb('#ece3d2','#2b5c7e')).domain([0,maxV])
 
   const cols = 4
   const cellW = container.node().clientWidth / cols - 12
@@ -2117,7 +2115,7 @@ async function renderModel() {
     error_x:{type:'data', symmetric:false,
              array:hi.map((h,i)=>h-est[i]), arrayminus:est.map((e,i)=>e-lo[i]),
              color:'#9aa0a8', thickness:1.5, width:5},
-    marker:{color:colors, size:11, line:{color:'#fff',width:1.5}},
+    marker:{color:colors, size:11, line:{color:'#fdfbf6',width:1.5}},
     hovertemplate:'%{y}<br>'+(isLogit?'OR':'\u03b2')+' = <b>%{x:.3f}</b><extra></extra>'
   }], PLOTLY_LAYOUT({
     xaxis:{...PLOTLY_LAYOUT().xaxis, title:isLogit?'Odds ratio':'Coefficient (WHO-5 points)'},
@@ -2168,7 +2166,7 @@ async function renderPrediction(pick, meta) {
       {x:xs, y:ys, mode:'markers+text', type:'scatter',
        text:d.map(r=>r.country), textposition:'top center', textfont:{size:7,color:C.muted},
        marker:{color:C.blue, size:d.map(r=>Math.max(6,Math.min(18,Math.sqrt(r.n)/3))), opacity:0.7,
-               line:{color:'#fff',width:1}},
+               line:{color:'#fdfbf6',width:1}},
        hovertemplate:'<b>%{text}</b><br>High-WFH: %{x:.1f}%<br>WHO-5: %{y:.1f}<extra></extra>'}
     ], PLOTLY_LAYOUT({
       xaxis:{...PLOTLY_LAYOUT().xaxis, title:'% often/always remote', ticksuffix:'%'},
@@ -2195,7 +2193,7 @@ async function renderPrediction(pick, meta) {
                color:'#9aa0a8',thickness:1.5,width:5},
       type:'scatter',mode:'lines+markers',
       line:{color:C.blue,width:2.5,shape:'spline'},
-      marker:{color:d.map(r=>WFH_COLORS[r.wfh]),size:11,line:{color:'#fff',width:1.5}},
+      marker:{color:d.map(r=>WFH_COLORS[r.wfh]),size:11,line:{color:'#fdfbf6',width:1.5}},
       hovertemplate:'%{x}: <b>%{y:.1f}</b> WHO-5<extra></extra>'
     }], PLOTLY_LAYOUT({
       yaxis:{...PLOTLY_LAYOUT().yaxis,title:'Predicted WHO-5',range:[58,68]},
@@ -2208,14 +2206,14 @@ async function renderPrediction(pick, meta) {
     const xlab = ['Low/no remote','High remote']
     Plotly.newPlot('plot-model-pred', [
       {x:xlab,y:noKids.map(r=>r.fit),name:'No children',mode:'lines+markers',
-       line:{color:C.blue,width:2.5},marker:{size:10,color:C.blue,line:{color:'#fff',width:1.5}},
+       line:{color:C.blue,width:2.5},marker:{size:10,color:C.blue,line:{color:'#fdfbf6',width:1.5}},
        hovertemplate:'No children, %{x}: <b>%{y:.1f}</b><extra></extra>'},
       {x:xlab,y:kids.map(r=>r.fit),name:'Has children',mode:'lines+markers',
-       line:{color:C.orange,width:2.5},marker:{size:10,color:C.orange,line:{color:'#fff',width:1.5}},
+       line:{color:C.orange,width:2.5},marker:{size:10,color:C.orange,line:{color:'#fdfbf6',width:1.5}},
        hovertemplate:'Has children, %{x}: <b>%{y:.1f}</b><extra></extra>'}
     ], PLOTLY_LAYOUT({
       yaxis:{...PLOTLY_LAYOUT().yaxis,title:'Predicted WHO-5'},
-      showlegend:true, legend:{x:.02,y:.02,bgcolor:'rgba(255,255,255,0.7)'},
+      showlegend:true, legend:{x:.02,y:.02,bgcolor:'rgba(253,251,246,0.75)'},
       margin:{l:50,r:16,t:16,b:40}
     }), PLOTLY_CONFIG)
   } else if (pick==='M4') {
@@ -2225,14 +2223,14 @@ async function renderPrediction(pick, meta) {
     const xlab = ['Low/no remote','High remote']
     Plotly.newPlot('plot-model-pred', [
       {x:xlab,y:pre.map(r=>r.fit),name:'2015 (pre-COVID)',mode:'lines+markers',
-       line:{color:WAVE_COLORS['2015'],width:2.5},marker:{size:10,color:WAVE_COLORS['2015'],line:{color:'#fff',width:1.5}},
+       line:{color:WAVE_COLORS['2015'],width:2.5},marker:{size:10,color:WAVE_COLORS['2015'],line:{color:'#fdfbf6',width:1.5}},
        hovertemplate:'2015, %{x}: <b>%{y:.1f}</b><extra></extra>'},
       {x:xlab,y:post.map(r=>r.fit),name:'2024 (post-COVID)',mode:'lines+markers',
-       line:{color:WAVE_COLORS['2024'],width:2.5},marker:{size:10,color:WAVE_COLORS['2024'],line:{color:'#fff',width:1.5}},
+       line:{color:WAVE_COLORS['2024'],width:2.5},marker:{size:10,color:WAVE_COLORS['2024'],line:{color:'#fdfbf6',width:1.5}},
        hovertemplate:'2024, %{x}: <b>%{y:.1f}</b><extra></extra>'}
     ], PLOTLY_LAYOUT({
       yaxis:{...PLOTLY_LAYOUT().yaxis,title:'Predicted WHO-5'},
-      showlegend:true, legend:{x:.02,y:.02,bgcolor:'rgba(255,255,255,0.7)'},
+      showlegend:true, legend:{x:.02,y:.02,bgcolor:'rgba(253,251,246,0.75)'},
       margin:{l:50,r:16,t:16,b:40}
     }), PLOTLY_CONFIG)
   }
@@ -2309,7 +2307,7 @@ async function plotLongWho5() {
     const pts = WFH_ORDER.map(wfh=>{ const r=data.find(d=>d.wave===w&&d.wfh===wfh); return r?r.who5:null })
     return {x:WFH_ORDER, y:pts, mode:'lines+markers', name:`Wave ${w}`,
       line:{color:WAVE_COLORS[w],width:3,shape:'spline'},
-      marker:{size:10,color:WAVE_COLORS[w],line:{color:'#ffffff',width:2}},
+      marker:{size:10,color:WAVE_COLORS[w],line:{color:'#fdfbf6',width:2}},
       hovertemplate:`Wave ${w} | <b>%{x}</b>: <b>%{y:.1f}</b>/100<extra></extra>`}
   })
   traces.push({x:WFH_ORDER, y:[50,50,50,50,50], mode:'lines', line:{color:C.red,dash:'dash',width:1.5}, showlegend:false, hoverinfo:'skip'})
