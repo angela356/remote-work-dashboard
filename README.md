@@ -4,12 +4,6 @@ Interactive dashboard for the Data Visualization project (D1 Group 19). It asks 
 
 **Version A — tab navigation.** Every view is one click away in the top menu; the reader chooses the order.
 
-## Publishing (GitHub Pages)
-
-Upload the contents of this folder to the root of the repository: `index.html`, the whole `data/` folder and this README. In *Settings → Pages* choose *Deploy from a branch*, branch `main`, folder `/ (root)`. The site is plain HTML and JavaScript: there is no build step.
-
-The map needs `data/europe.json` (the European country boundaries). If the map area stays empty, check that this file is present in `data/` under exactly that name.
-
 ## Data sources
 
 | Source | Content | Unit |
